@@ -16,6 +16,213 @@ namespace tact
 
   }
 }
+
+void addToGroup()
+{
+
+  //Create dummy data
+  uint32_t enc_ids[tact::display::number_of_motors], dec_ids[tact::display::number_of_motors];
+  for (uint8_t i = 0; i < tact::display::number_of_motors; i++)
+  {
+    enc_ids[i] = i;
+  }
+  tact::vtproto::output_id_list_t a, b;
+  a.ids_ = enc_ids;
+  a.length_ = 32;
+
+  b.ids_ = dec_ids;
+  b.length_ = 0;
+
+  InstAddToGroup enc_inst_add_to_group = tact::vtproto::makeEncodingInstAddToGroup(1, &a);
+  InstAddToGroup dec_inst_add_to_group = tact::vtproto::makeDecodingInstAddToGroup(&b);
+
+  pb_ostream_t pb_ostream;
+  pb_ostream = pb_ostream_from_buffer(tact::vtproto::vt_message_buffer, sizeof(tact::vtproto::vt_message_buffer));
+
+  // pb_encode(&pb_ostream, InstAddToGroup_fields, &enc_inst_add_to_group);
+  pb_encode_ex(&pb_ostream, InstAddToGroup_fields, &enc_inst_add_to_group, PB_ENCODE_DELIMITED);
+
+  pb_istream_t pb_istream;
+  pb_istream = pb_istream_from_buffer(tact::vtproto::vt_message_buffer, pb_ostream.bytes_written);
+
+  Serial.printf("Bytes written: %i\n", pb_ostream.bytes_written);
+  Serial.printf("Bytes left: %i\n", pb_istream.bytes_left);
+
+  // if (!pb_decode(&pb_istream, InstAddToGroup_fields, &dec_inst_add_to_group))
+  if (!pb_decode_ex(&pb_istream, InstAddToGroup_fields, &dec_inst_add_to_group, PB_DECODE_DELIMITED))
+  {
+    const char *error = PB_GET_ERROR(&pb_istream);
+    Serial.printf("pb_decode error: %s", error);
+    return;
+  }
+}
+
+/* The callback below is a message-level callback which is called before each
+ * submessage is encoded. It is used to set the pb_callback_t callbacks inside
+ * the submessage. The reason we need this is that different submessages share
+ * storage inside oneof union, and before we know the message type we can't set
+ * the callbacks without overwriting each other.
+ */
+// bool decode_and_store(pb_istream_t *stream, const pb_field_t *field, void **arg)
+// bool decode_and_directly_output(pb_istream_t *stream, const pb_field_t *field, void **arg)
+bool decode_instruction_callback(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+  //https://github.com/nanopb/nanopb/blob/master/tests/oneof_callback/decode_oneof.c
+  if (field->tag == Instruction_add_groups_to_group_tag)
+  {
+    InstAddToGroup *f = field->pData;
+    // f->ids_to_be_added.funcs.decode =
+  }
+  else if (field->tag == Instruction_add_channels_to_group_tag)
+  {
+    InstAddToGroup *f = field->pData;
+    // f->ids_to_be_added.funcs.decode =
+  }
+  else if (field->tag == Instruction_wait_tag)
+  {
+  }
+  else if (field->tag == Instruction_set_waveform_type_tag)
+  {
+  }
+  else if (field->tag == Instruction_set_parameter_tag)
+  {
+    // InstInstantlySetParameter *f = field->pData;
+    //Do in need to do something here?
+  }
+  else if (field->tag == Instruction_interpolate_parameter_tag)
+  {
+  }
+
+  /* Once we return true, pb_dec_submessage() will go on to decode the
+     * submessage contents. But if we want, we can also decode it ourselves
+     * above and leave stream->bytes_left at 0 value, inhibiting automatic
+     * decoding.
+     */
+  return true;
+}
+
+void instantlySetParameter()
+{
+  //Create dummy data
+  InstInstantlySetParameter enc = InstInstantlySetParameter_init_default;
+  enc.which_parameter = InstInstantlySetParameter_intensity_tag;
+  enc.parameter.intensity = 0.33f;
+  enc.which_target_id = InstInstantlySetParameter_channel_id_tag;
+  enc.target_id.channel_id = 1;
+
+  InstInstantlySetParameter dec = InstInstantlySetParameter_init_default;
+
+  //Encode data and write into buffer
+  pb_ostream_t pb_ostream;
+  pb_ostream = pb_ostream_from_buffer(tact::vtproto::vt_message_buffer, sizeof(tact::vtproto::vt_message_buffer));
+  pb_encode_ex(&pb_ostream, InstInstantlySetParameter_fields, &enc, PB_ENCODE_DELIMITED);
+  // pb_encode(&pb_ostream, InstInstantlySetParameter_fields, &enc);
+
+  //Read data from buffer and decode
+  pb_istream_t pb_istream;
+  pb_istream = pb_istream_from_buffer(tact::vtproto::vt_message_buffer, pb_ostream.bytes_written);
+  Serial.printf("Bytes written: %i\n", pb_ostream.bytes_written);
+  Serial.printf("Bytes left: %i\n", pb_istream.bytes_left);
+  // if (!pb_decode(&pb_istream, InstInstantlySetParameter_fields, &dec))
+  if (!pb_decode_ex(&pb_istream, InstInstantlySetParameter_fields, &dec, PB_DECODE_DELIMITED))
+  {
+    const char *error = PB_GET_ERROR(&pb_istream);
+    Serial.printf("pb_decode error: %s", error);
+    return;
+  }
+  Serial.printf("Decoded: %f @ %i\n", dec.parameter.intensity, dec.target_id.channel_id);
+}
+
+void instructionAddToGroup()
+{
+  //Create dummy data
+  uint32_t enc_ids[tact::display::number_of_motors], dec_ids[tact::display::number_of_motors];
+  for (uint8_t i = 0; i < tact::display::number_of_motors; i++)
+  {
+    enc_ids[i] = i;
+  }
+  tact::vtproto::output_id_list_t a, b;
+  a.ids_ = enc_ids;
+  a.length_ = 32;
+  b.ids_ = dec_ids;
+  b.length_ = 0;
+
+  InstAddToGroup enc_inst_add_to_group = tact::vtproto::makeEncodingInstAddToGroup(1, &a);
+  InstAddToGroup dec_inst_add_to_group = tact::vtproto::makeDecodingInstAddToGroup(&b);
+  Instruction enc_instruction = Instruction_init_default;
+  enc_instruction.which_concrete_instruction = Instruction_add_channels_to_group_tag;
+  enc_instruction.concrete_instruction.add_channels_to_group = enc_inst_add_to_group;
+
+  Instruction dec_instruction = Instruction_init_default;
+
+  pb_ostream_t pb_ostream;
+  pb_ostream = pb_ostream_from_buffer(tact::vtproto::vt_message_buffer, sizeof(tact::vtproto::vt_message_buffer));
+
+  pb_encode_ex(&pb_ostream, Instruction_fields, &enc_instruction, PB_ENCODE_DELIMITED);
+  // pb_encode(&pb_ostream, Instruction_fields, &enc_instruction);
+
+  pb_istream_t pb_istream;
+  pb_istream = pb_istream_from_buffer(tact::vtproto::vt_message_buffer, pb_ostream.bytes_written);
+
+  Serial.printf("Bytes written: %i\n", pb_ostream.bytes_written);
+  Serial.printf("Bytes left: %i\n", pb_istream.bytes_left);
+  // if (!pb_decode(&pb_istream, Instruction_fields, &dec_instruction))
+  if (!pb_decode_ex(&pb_istream, Instruction_fields, &dec_instruction, PB_DECODE_DELIMITED))
+  {
+    const char *error = PB_GET_ERROR(&pb_istream);
+    Serial.printf("pb_decode error: %s", error);
+    return;
+  }
+  //How to find out which type of instruction is in decoded instruction
+  Serial.printf("decoded construction with tag number %i\n", dec_instruction.which_concrete_instruction);
+  tact::vtproto::printInstructionType(dec_instruction.which_concrete_instruction);
+  Serial.printf("info %i\n", b.length_);
+  for (uint8_t i = 0; i < b.length_; i++)
+  {
+    Serial.println(b.ids_[i]);
+  }
+}
+
+void instructionInstantlySetParameter()
+{
+
+  InstInstantlySetParameter enc_set_parameter = InstInstantlySetParameter_init_default;
+  enc_set_parameter.which_parameter = InstInstantlySetParameter_intensity_tag;
+  enc_set_parameter.parameter.intensity = 0.33f;
+  enc_set_parameter.which_target_id = InstInstantlySetParameter_channel_id_tag;
+  enc_set_parameter.target_id.channel_id = 1;
+
+  Instruction enc_instruction = Instruction_init_default;
+
+  InstInstantlySetParameter dec_set_parameter = InstInstantlySetParameter_init_default;
+  Instruction dec_instruction = Instruction_init_default;
+
+  enc_instruction.which_concrete_instruction = Instruction_set_parameter_tag;
+  enc_instruction.concrete_instruction.set_parameter = enc_set_parameter;
+
+  pb_ostream_t pb_ostream;
+  pb_ostream = pb_ostream_from_buffer(tact::vtproto::vt_message_buffer, sizeof(tact::vtproto::vt_message_buffer));
+
+  pb_encode_ex(&pb_ostream, Instruction_fields, &enc_instruction, PB_ENCODE_DELIMITED);
+  // pb_encode(&pb_ostream, Instruction_fields, &enc_instruction);
+
+  pb_istream_t pb_istream;
+  pb_istream = pb_istream_from_buffer(tact::vtproto::vt_message_buffer, pb_ostream.bytes_written);
+
+  Serial.printf("Bytes written: %i\n", pb_ostream.bytes_written);
+  Serial.printf("Bytes left: %i\n", pb_istream.bytes_left);
+  // if (!pb_decode(&pb_istream, Instruction_fields, &dec_instruction))
+  if (!pb_decode_ex(&pb_istream, Instruction_fields, &dec_instruction, PB_DECODE_DELIMITED))
+  {
+    const char *error = PB_GET_ERROR(&pb_istream);
+    Serial.printf("pb_decode error: %s", error);
+    return;
+  }
+  //How to find out which type of instruction is in decoded instruction
+  Serial.printf("decoded construction with tag number %i\n", dec_instruction.which_concrete_instruction);
+  tact::vtproto::printInstructionType(dec_instruction.which_concrete_instruction);
+}
+
 void setup()
 {
   Serial.begin(9600);
@@ -52,45 +259,10 @@ void setup()
   service->start();
   BLEDevice::startAdvertising();
 
-  //Create dummy data
-  uint32_t add_ids_to_group[tact::display::number_of_motors], encoded_ids[tact::display::number_of_motors];
-  for (uint8_t i = 0; i < tact::display::number_of_motors; i++)
-  {
-    add_ids_to_group[i] = i;
-  }
-  tact::vtproto::output_id_list_t a, b;
-  a.ids_ = add_ids_to_group;
-  a.length_ = 32;
-
-  b.ids_ = encoded_ids;
-  b.length_ = 0;
-
-  InstAddToGroup add_to_group = tact::vtproto::makeEncodingInstAddToGroup(1, &a);
-  InstAddToGroup encoded_add_to_group = tact::vtproto::makeDecodingInstAddToGroup(&b);
-
-  // InstInstantlySetParameter set_parameter = InstInstantlySetParameter_init_zero;
-  // Instruction i_group = {Instruction_add_channels_to_group_tag, {add_to_group}};
-  // Instruction i_group, i_p;
-  // i_p.which_concrete_instruction = Instruction_set_parameter_tag;
-  // i_p.concrete_instruction.set_parameter = set_parameter;
-  // i_group.which_concrete_instruction = Instruction_add_channels_to_group_tag;
-  // i_group.concrete_instruction.add_channels_to_group = add_to_group;
-
-  // pb_encode_ex(&pb_output_stream, &InstAddToGroup_msg, &add_to_group, PB_ENCODE_DELIMITED);
-  pb_ostream_t pb_output_stream;
-  pb_output_stream = pb_ostream_from_buffer(tact::vtproto::vt_message_buffer, sizeof(tact::vtproto::vt_message_buffer));
-  pb_encode(&pb_output_stream, InstAddToGroup_fields, &add_to_group);
-
-  pb_istream_t pb_input_stream;
-  pb_input_stream = pb_istream_from_buffer(tact::vtproto::vt_message_buffer, pb_output_stream.bytes_written);
-  Serial.printf("Bytes written: %i\n", pb_output_stream.bytes_written);
-  Serial.printf("Bytes left: %i\n", pb_input_stream.bytes_left);
-  if (!pb_decode(&pb_input_stream, InstAddToGroup_fields, &encoded_add_to_group))
-  {
-    const char *error = PB_GET_ERROR(&pb_input_stream);
-    Serial.printf("pb_decode error: %s", error);
-    return;
-  }
+  // addToGroup();
+  // instantlySetParameter();
+  // instructionInstantlySetParameter();
+  instructionAddToGroup();
 }
 
 void loop()
