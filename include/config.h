@@ -10,5 +10,8 @@ namespace tact
         const uint8_t number_of_motors = 32;
 
     }
+    namespace vtproto {
+        const uint8_t number_of_outputs = tact::display::number_of_motors;
+    }
 }
 #endif // !CONFIG_H_

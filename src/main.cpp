@@ -1,6 +1,9 @@
 #include <Arduino.h>
 #include <ble_esp.h>
 #include <ble_services.h>
+#include <pb_encode.h>
+#include <pb_decode.h>
+#include <vtproto.pb.h>
 #include <vtproto.h>
 #include "config.h"
 
@@ -10,6 +13,7 @@ namespace tact
   {
     const uint16_t kBufferSize = 2048;
     uint8_t vt_message_buffer[kBufferSize];
+
   }
 }
 void setup()
@@ -48,7 +52,45 @@ void setup()
   service->start();
   BLEDevice::startAdvertising();
 
-  tact::vtproto::foo();
+  //Create dummy data
+  uint32_t add_ids_to_group[tact::display::number_of_motors], encoded_ids[tact::display::number_of_motors];
+  for (uint8_t i = 0; i < tact::display::number_of_motors; i++)
+  {
+    add_ids_to_group[i] = i;
+  }
+  tact::vtproto::output_id_list_t a, b;
+  a.ids_ = add_ids_to_group;
+  a.length_ = 32;
+
+  b.ids_ = encoded_ids;
+  b.length_ = 0;
+
+  InstAddToGroup add_to_group = tact::vtproto::makeEncodingInstAddToGroup(1, &a);
+  InstAddToGroup encoded_add_to_group = tact::vtproto::makeDecodingInstAddToGroup(&b);
+
+  // InstInstantlySetParameter set_parameter = InstInstantlySetParameter_init_zero;
+  // Instruction i_group = {Instruction_add_channels_to_group_tag, {add_to_group}};
+  // Instruction i_group, i_p;
+  // i_p.which_concrete_instruction = Instruction_set_parameter_tag;
+  // i_p.concrete_instruction.set_parameter = set_parameter;
+  // i_group.which_concrete_instruction = Instruction_add_channels_to_group_tag;
+  // i_group.concrete_instruction.add_channels_to_group = add_to_group;
+
+  // pb_encode_ex(&pb_output_stream, &InstAddToGroup_msg, &add_to_group, PB_ENCODE_DELIMITED);
+  pb_ostream_t pb_output_stream;
+  pb_output_stream = pb_ostream_from_buffer(tact::vtproto::vt_message_buffer, sizeof(tact::vtproto::vt_message_buffer));
+  pb_encode(&pb_output_stream, InstAddToGroup_fields, &add_to_group);
+
+  pb_istream_t pb_input_stream;
+  pb_input_stream = pb_istream_from_buffer(tact::vtproto::vt_message_buffer, pb_output_stream.bytes_written);
+  Serial.printf("Bytes written: %i\n", pb_output_stream.bytes_written);
+  Serial.printf("Bytes left: %i\n", pb_input_stream.bytes_left);
+  if (!pb_decode(&pb_input_stream, InstAddToGroup_fields, &encoded_add_to_group))
+  {
+    const char *error = PB_GET_ERROR(&pb_input_stream);
+    Serial.printf("pb_decode error: %s", error);
+    return;
+  }
 }
 
 void loop()
