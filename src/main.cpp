@@ -37,6 +37,7 @@ void setup()
 
   // Setup Service and its Characteristics
   BLEService *service = server->createService(service_tactile_display::kServiceUuid, 1 + (service_tactile_display::kNumberOfCharacteristics * 5));
+  pAdvertising->addServiceUUID(service_tactile_display::kServiceUuid);
   BLECharacteristic *characteristics[service_tactile_display::kNumberOfCharacteristics];
   createCharacteristicsFromDescription(service, characteristics, service_tactile_display::characteristic_descriptions, service_tactile_display::kNumberOfCharacteristics);
 
@@ -53,6 +54,7 @@ void setup()
 
   service->start();
   BLEDevice::startAdvertising();
+  Serial.println(BLEDevice::getAddress().toString().c_str());
 }
 
 void loop()
