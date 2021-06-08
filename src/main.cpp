@@ -20,11 +20,15 @@ namespace tact
 
 void setup()
 {
+
+#ifdef DEBUG_SERIAL
   Serial.begin(115200);
   while (!Serial)
   {
     /* code */
   }
+#endif
+
   BLEDevice::init("Devboard");
   BLEServer *server = BLEDevice::createServer();
   server->setCallbacks(new tact::ble::BleConnectionCallback());
@@ -53,7 +57,10 @@ void setup()
 
   service->start();
   BLEDevice::startAdvertising();
+
+#ifdef DEBUG_SERIAL
   Serial.println(BLEDevice::getAddress().toString().c_str());
+#endif
 }
 
 void loop()

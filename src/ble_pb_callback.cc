@@ -11,12 +11,14 @@ namespace tact
             Decode data with pb_decode_ex, only expect instructions
             execute instructions after reveicinmg them
             */
+#ifdef DEBUG_SERIAL
             Serial.printf("Received message %s (length %i)\n", pCharacteristic->getValue(), pCharacteristic->getValue().length());
             for (size_t i = 0; i < pCharacteristic->getValue().length(); i++)
             {
                 Serial.printf("%X ", pCharacteristic->getData()[i]);
             }
             Serial.println();
+#endif
 
             pb_istream_t istream_ = pb_istream_from_buffer(pCharacteristic->getData(), pCharacteristic->getValue().length());
             Instruction instruction_ = Instruction_init_default;
@@ -27,7 +29,10 @@ namespace tact
             {
                 if (!pb_decode_ex(&istream_, Instruction_fields, &instruction_, PB_DECODE_DELIMITED))
                 {
+
+#ifdef DEBUG_SERIAL
                     Serial.printf("Decoding failed: %s\n", PB_GET_ERROR(&istream_));
+#endif
                 }
                 /* code */
                 tact::vtproto::executeInstruction(instruction_);
