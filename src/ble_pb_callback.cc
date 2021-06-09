@@ -4,7 +4,8 @@ namespace tact
 {
     namespace ble
     {
-        void VtprotoImidiateExecutionCallback::onWrite(BLECharacteristic *pCharacteristic)
+        ReceiveVtprotoCallback::ReceiveVtprotoCallback(tact::vtproto::MessageReceiver *receiver) : message_receiver_(receiver){};
+        void ReceiveVtprotoCallback::onWrite(BLECharacteristic *pCharacteristic)
         {
             /*
             Read Data from buffer
@@ -22,7 +23,7 @@ namespace tact
 
             pb_istream_t istream_ = pb_istream_from_buffer(pCharacteristic->getData(), pCharacteristic->getValue().length());
             Instruction instruction_ = Instruction_init_default;
-            tact::vtproto::group_t g;
+            tact::vtproto::Group g;
             instruction_.cb_concrete_instruction.funcs.decode = tact::vtproto::decode::callbackInstruction;
             instruction_.cb_concrete_instruction.arg = &g;
             while (istream_.bytes_left > 0)
@@ -34,11 +35,11 @@ namespace tact
                     Serial.printf("Decoding failed: %s\n", PB_GET_ERROR(&istream_));
 #endif
                 }
-                /* code */
-                tact::vtproto::executeInstruction(instruction_);
+                // tact::vtproto::executeInstruction(instruction_);
+                message_receiver_->onInstruction(instruction_);
             }
         }
-        void VtprotoImidiateExecutionCallback::onRead(BLECharacteristic *pCharacteristic)
+        void ReceiveVtprotoCallback::onRead(BLECharacteristic *pCharacteristic)
         {
         }
     }
