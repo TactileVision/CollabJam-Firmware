@@ -5,6 +5,8 @@
 #include <pb_decode.h>
 #include <vtproto.h>
 #include <vtproto.pb.h>
+
+#include "interface/message_interface.h"
 namespace tact {
 namespace ble {
 

@@ -2,8 +2,8 @@
 #include <ble_esp.h>
 #include <ble_services.h>
 #include <vtproto.h>
-// #include <vtproto_handler/immediate_output.h>
-#include <vtproto_handler/tacton_output.h>
+#include <vtproto_handler/immediate_output.h>
+// #include <vtproto_handler/tacton_output.h>
 
 #include "ble_pb_callback.h"
 #include "esp32_vtproto_interface.h"
@@ -19,23 +19,25 @@ char authorBuf[130] = {0};
 char patterNameBuf[130] = {0};
 }  // namespace ble
 
-tact::vtproto::HardwareInterface vtp_esp_interface(&setIntensity,
-                                                   kNumOfOutputs);
-// tact::vtproto::ImmediateOutputMode immediate_output_mode(vtp_esp_interface);
-tact::vtproto::ReceiveAndPlayTactonMode rec_and_play(vtp_esp_interface);
-tact::ble::ReceiveVtprotoCallback vtp_ble_callback(&rec_and_play);
+const uint8_t kNumOfOutputs = 8;
+uint8_t kMotorPins[kNumOfOutputs] = {13, 27, 26, 25, 33, 32, 19, 21};
+
+// tact::vtproto::HardwareInterface vtp_esp_interface(&setIntensity,
+//                                                    kNumOfOutputs);
+EspVtprotoHardwareInterface vtp_esp_interface((uint8_t)kNumOfOutputs,
+                                              kMotorPins);
+tact::vtproto::ImmediateOutputMode immediate_output_mode(vtp_esp_interface);
+// tact::vtproto::ReceiveAndPlayTactonMode rec_and_play(vtp_esp_interface);
+tact::ble::ReceiveVtprotoCallback vtp_ble_callback(&immediate_output_mode);
 }  // namespace tact
 
 void setup() {
 #ifdef DEBUG_SERIAL
   Serial.begin(115200);
   while (!Serial) {
-    /* code */
   }
 #endif
 
-  tact::rec_and_play.setFileHeaderCharArrays(tact::ble::authorBuf,
-                                             tact::ble::patterNameBuf);
   BLEDevice::init(tact::ble::kDeviceName);
   BLEServer* server = BLEDevice::createServer();
   server->setCallbacks(new tact::ble::BleConnectionCallback());
@@ -62,7 +64,7 @@ void setup() {
   // Assign Values to Characteristics
   characteristics
       [tact::ble::service_tactile_display::kCharacteristicNumberOfOutputs]
-          ->setValue((uint8_t*)&kNumOfOutputs, 1);
+          ->setValue((uint8_t*)&tact::kNumOfOutputs, 1);
   characteristics
       [tact::ble::service_tactile_display::kCharacteristicDisplayPlaybackState]
           ->setValue("IDLE");
@@ -74,13 +76,9 @@ void setup() {
       ->setValue((uint16_t&)tact::vtproto::kBufferSize);
 
   // Assign Callbacks to Characteristics
-  // characteristics[tact::ble::service_tactile_display::kCharacteristicModeVtprotoBuffer]->setCallbacks(new
-  // tact::ble::ReceiveVtprotoCallback());
   characteristics
       [tact::ble::service_tactile_display::kCharacteristicModeVtprotoBuffer]
           ->setCallbacks(&tact::vtp_ble_callback);
-  // characteristics[tact::ble::service_tactile_display::kCharacteristicDisplayPlaybackRequestStop]->setCallbacks(new
-  // s);
 
   service->start();
   BLEDevice::startAdvertising();
