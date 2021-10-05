@@ -1,7 +1,6 @@
 #ifndef TACTON_PLAYER_ESP_H_
 #define TACTON_PLAYER_ESP_H_
 #include <interface/hardware_interface.h>
-#include <interface/tacton_processor.h>
 #include <tacton/tacton.h>
 #include <vtproto.pb.h>
 

@@ -9,13 +9,29 @@
 
 #include "ble_pb_callback.h"
 #include "esp32_vtproto_interface.h"
+#include "tactile_display.h"
+#include "tactile_display.pb.h"
 #include "tacton_player_esp.h"
+
 namespace tact {
 namespace vtproto {
 const uint16_t kBufferSize = 2048;
 uint8_t vt_message_buffer[kBufferSize];
 TactonStore tacton_store;
 // Tacton tacton;
+const uint8_t kNumOfOutputs = 8;
+uint8_t kMotorPins[kNumOfOutputs] = {13, 27, 26, 25, 33, 32, 19, 21};
+
+ChannelConfig channel_configs[kNumOfOutputs] = {
+    {1, MotorType::MotorType_ERM, false, 0},
+    {2, MotorType::MotorType_ERM, false, 0},
+    {3, MotorType::MotorType_ERM, false, 0},
+    {4, MotorType::MotorType_ERM, false, 0},
+    {5, MotorType::MotorType_ERM, false, 0},
+    {6, MotorType::MotorType_ERM, false, 0},
+    {7, MotorType::MotorType_ERM, false, 0},
+    {8, MotorType::MotorType_ERM, false, 0},
+};
 
 }  // namespace vtproto
 namespace ble {
@@ -24,17 +40,9 @@ const std::string kDeviceName = "ESP32 VTP";
 // char patterNameBuf[130] = {0};
 }  // namespace ble
 
-const uint8_t kNumOfOutputs = 8;
-uint8_t kMotorPins[kNumOfOutputs] = {13, 27, 26, 25, 33, 32, 19, 21};
-
-// tact::vtproto::HardwareInterface vtp_esp_interface(&setIntensity,
-//                                                    kNumOfOutputs);
-EspVtprotoHardwareInterface vtp_esp_interface((uint8_t)kNumOfOutputs,
-                                              kMotorPins);
+EspVtprotoHardwareInterface vtp_esp_interface(
+    (uint8_t)tact::vtproto::kNumOfOutputs, tact::vtproto::kMotorPins);
 tact::vtproto::TactonPlayerESP tacton_player_esp(vtp_esp_interface);
-
-// tact::vtproto::TactonReceiver tacton_receiver(tact::vtproto::tacton_store,
-//                                               tacton_player_esp);
 
 tact::vtproto::TactonReceiver tacton_receiver(
     tact::vtproto::tacton_store.getNewTacton());
@@ -51,6 +59,14 @@ void setup() {
   while (!Serial) {
   }
 #endif
+  tact::vtproto::encode::DisplayConfigEncoder display_config_encoder(
+      OutputMode::OutputMode_VTPROTO_REALTIME, tact::vtproto::channel_configs,
+      tact::vtproto::kNumOfOutputs);
+
+  //   DisplayConfig display_config = DisplayConfig_init_default;
+  //   DisplayConfig display_config = display_config_encoder.getDisplayConfig();
+  //   display_config_encoder.
+  //   Serial.printf("",(char*)display_config_encoder.getEncodedMessage());
 
   BLEDevice::init(tact::ble::kDeviceName);
   BLEServer* server = BLEDevice::createServer();
@@ -78,7 +94,7 @@ void setup() {
   // Assign Values to Characteristics
   characteristics
       [tact::ble::service_tactile_display::kCharacteristicNumberOfOutputs]
-          ->setValue((uint8_t*)&tact::kNumOfOutputs, 1);
+          ->setValue((uint8_t*)&tact::vtproto::kNumOfOutputs, 1);
   characteristics
       [tact::ble::service_tactile_display::kCharacteristicDisplayPlaybackState]
           ->setValue("IDLE");
@@ -88,7 +104,10 @@ void setup() {
   characteristics[tact::ble::service_tactile_display::
                       kCharacteristicModeVtprotoMaxMsgLength]
       ->setValue((uint16_t&)tact::vtproto::kBufferSize);
-
+  characteristics
+      [tact::ble::service_tactile_display::kCharacteristicDisplayConfig]
+          ->setValue(display_config_encoder.getEncodedMessage(),
+                     display_config_encoder.getEncodedMessageLength());
   // Assign Callbacks to Characteristics
   characteristics
       [tact::ble::service_tactile_display::kCharacteristicModeVtprotoBuffer]
