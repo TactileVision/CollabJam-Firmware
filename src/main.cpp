@@ -18,10 +18,24 @@ namespace vtproto {
 const uint16_t kBufferSize = 2048;
 uint8_t vt_message_buffer[kBufferSize];
 TactonStore tacton_store;
+
 // Tacton tacton;
+}  // namespace vtproto
+namespace display {
+
+const uint16_t kConfigChangeBufferSize = 255;
+uint8_t config_change_buffer[kConfigChangeBufferSize];
+
 const uint8_t kNumOfOutputs = 8;
 uint8_t kMotorPins[kNumOfOutputs] = {13, 27, 26, 25, 33, 32, 19, 21};
 
+const uint8_t kAvailableOutputModesLength = 2;
+const uint8_t kAvailableMotorTypesLength = 2;
+OutputMode available_ouput_modes[kAvailableOutputModesLength] = {
+    OutputMode_VTPROTO_TACTON, OutputMode_VTPROTO_REALTIME};
+MotorType available_motor_types[kAvailableMotorTypesLength] = {
+    MotorType_ERM, MotorType_PNEUMATIC};
+OutputMode current_output_mode = OutputMode_VTPROTO_TACTON;
 ChannelConfig channel_configs[kNumOfOutputs] = {
     {1, MotorType::MotorType_ERM, false, 0},
     {2, MotorType::MotorType_ERM, false, 0},
@@ -32,16 +46,25 @@ ChannelConfig channel_configs[kNumOfOutputs] = {
     {7, MotorType::MotorType_ERM, false, 0},
     {8, MotorType::MotorType_ERM, false, 0},
 };
+tact::vtproto::encode::DisplayConfigEncoder display_config_encoder(
+    OutputMode::OutputMode_VTPROTO_REALTIME, tact::display::channel_configs,
+    tact::display::kNumOfOutputs);
 
-}  // namespace vtproto
+tact::vtproto::encode::ConfigOptionsEncoder config_options_encoder(
+    tact::display::available_ouput_modes,
+    tact::display::kAvailableOutputModesLength,
+    tact::display::available_motor_types,
+    tact::display::kAvailableMotorTypesLength, false);
+}  // namespace display
 namespace ble {
 const std::string kDeviceName = "ESP32 VTP";
-// char authorBuf[130] = {0};
-// char patterNameBuf[130] = {0};
+tact::ble::ConfigOptionsCallbackHandler config_options_callback_handler(
+    &tact::display::display_config_encoder,
+    tact::display::config_options_encoder.getAvalilableConfigurationOptions());
 }  // namespace ble
 
 EspVtprotoHardwareInterface vtp_esp_interface(
-    (uint8_t)tact::vtproto::kNumOfOutputs, tact::vtproto::kMotorPins);
+    (uint8_t)tact::display::kNumOfOutputs, tact::display::kMotorPins);
 tact::vtproto::TactonPlayerESP tacton_player_esp(vtp_esp_interface);
 
 tact::vtproto::TactonReceiver tacton_receiver(
@@ -59,15 +82,6 @@ void setup() {
   while (!Serial) {
   }
 #endif
-  tact::vtproto::encode::DisplayConfigEncoder display_config_encoder(
-      OutputMode::OutputMode_VTPROTO_REALTIME, tact::vtproto::channel_configs,
-      tact::vtproto::kNumOfOutputs);
-
-  //   DisplayConfig display_config = DisplayConfig_init_default;
-  //   DisplayConfig display_config = display_config_encoder.getDisplayConfig();
-  //   display_config_encoder.
-  //   Serial.printf("",(char*)display_config_encoder.getEncodedMessage());
-
   BLEDevice::init(tact::ble::kDeviceName);
   BLEServer* server = BLEDevice::createServer();
   server->setCallbacks(new tact::ble::BleConnectionCallback());
@@ -94,26 +108,53 @@ void setup() {
   // Assign Values to Characteristics
   characteristics
       [tact::ble::service_tactile_display::kCharacteristicNumberOfOutputs]
-          ->setValue((uint8_t*)&tact::vtproto::kNumOfOutputs, 1);
+          ->setValue((uint8_t*)&tact::display::kNumOfOutputs, 1);
+
   characteristics
       [tact::ble::service_tactile_display::kCharacteristicDisplayPlaybackState]
           ->setValue("IDLE");
+
   // characteristics[tact::ble::service_tactile_display::kCharacteristicDisplayPlaybackRequestStop]->setValue((uint16_t)0);
   // // No need to write?
   // TODO Check if value of constant is equal to propagated value
+
   characteristics[tact::ble::service_tactile_display::
                       kCharacteristicModeVtprotoMaxMsgLength]
       ->setValue((uint16_t&)tact::vtproto::kBufferSize);
+
+  // Display config characteristic
   characteristics
       [tact::ble::service_tactile_display::kCharacteristicDisplayConfig]
-          ->setValue(display_config_encoder.getEncodedMessage(),
-                     display_config_encoder.getEncodedMessageLength());
+          ->setValue(
+              tact::display::display_config_encoder.getEncodedMessage(),
+              tact::display::display_config_encoder.getEncodedMessageLength());
+
+  // Available display config options buffer
+  // Available channel configs buffer
+  characteristics[tact::ble::service_tactile_display::
+                      kCharacteristicConfigAvailableOptions]
+      ->setValue(
+          tact::display::config_options_encoder.getEncodedMessage(),
+          tact::display::config_options_encoder.getEncodedMessageLength());
+
+  characteristics[tact::ble::service_tactile_display::
+                      kCharacteristicConfigChangeBufferMaxLength]
+      ->setValue((uint16_t&)tact::display::kConfigChangeBufferSize);
   // Assign Callbacks to Characteristics
   characteristics
       [tact::ble::service_tactile_display::kCharacteristicModeVtprotoBuffer]
           ->setCallbacks(&tact::vtp_ble_callback);
 
+  // Assign displayConfig characteristic to handler instance and instance to
+  tact::ble::config_options_callback_handler.setBleCharacteristic(
+      characteristics
+          [tact::ble::service_tactile_display::kCharacteristicDisplayConfig]);
+  characteristics
+      [tact::ble::service_tactile_display::kCharacteristicConfigChangeBuffer]
+          ->setCallbacks(&tact::ble::config_options_callback_handler);
+
   service->start();
+
   BLEDevice::startAdvertising();
 
 #ifdef DEBUG_SERIAL

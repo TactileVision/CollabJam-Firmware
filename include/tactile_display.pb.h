@@ -26,10 +26,14 @@ typedef enum _MotorType {
 } MotorType;
 
 /* Struct definitions */
-typedef struct _AvailableConfigOptions {
+typedef struct _AvailableDisplayConfigOptions {
+  pb_callback_t output_modes;
+} AvailableDisplayConfigOptions;
+
+typedef struct _AvailableChannelConfigOptions {
   pb_callback_t motor_types;
   bool variable_voltage;
-} AvailableConfigOptions;
+} AvailableChannelConfigOptions;
 
 typedef struct _ChannelConfig {
   uint32_t channel_number;
@@ -44,9 +48,16 @@ typedef struct _DisplayConfig {
   pb_callback_t channel_configs;
 } DisplayConfig;
 
-typedef struct _ReqSetOutputMode {
+typedef struct _ReqSetDisplayConfig {
   OutputMode output_mode;
-} ReqSetOutputMode;
+} ReqSetDisplayConfig;
+
+typedef struct _AvailableConfigurationOptions {
+  bool has_display_config_options;
+  AvailableDisplayConfigOptions display_config_options;
+  bool has_channel_config_options;
+  AvailableChannelConfigOptions channel_config_options;
+} AvailableConfigurationOptions;
 
 typedef struct _ReqSetChannelConfig {
   bool has_channel_config;
@@ -73,9 +84,18 @@ extern "C" {
   {                                      \
     _OutputMode_MIN, 0, { {NULL}, NULL } \
   }
-#define AvailableConfigOptions_init_default \
+#define AvailableChannelConfigOptions_init_default \
   { {{NULL}, NULL}, 0 }
-#define ReqSetOutputMode_init_default \
+#define AvailableDisplayConfigOptions_init_default \
+  {                                                \
+    { {NULL}, NULL }                               \
+  }
+#define AvailableConfigurationOptions_init_default            \
+  {                                                           \
+    false, AvailableDisplayConfigOptions_init_default, false, \
+        AvailableChannelConfigOptions_init_default            \
+  }
+#define ReqSetDisplayConfig_init_default \
   { _OutputMode_MIN }
 #define ReqSetChannelConfig_init_default \
   { false, ChannelConfig_init_default }
@@ -85,23 +105,35 @@ extern "C" {
   {                                      \
     _OutputMode_MIN, 0, { {NULL}, NULL } \
   }
-#define AvailableConfigOptions_init_zero \
+#define AvailableChannelConfigOptions_init_zero \
   { {{NULL}, NULL}, 0 }
-#define ReqSetOutputMode_init_zero \
+#define AvailableDisplayConfigOptions_init_zero \
+  {                                             \
+    { {NULL}, NULL }                            \
+  }
+#define AvailableConfigurationOptions_init_zero            \
+  {                                                        \
+    false, AvailableDisplayConfigOptions_init_zero, false, \
+        AvailableChannelConfigOptions_init_zero            \
+  }
+#define ReqSetDisplayConfig_init_zero \
   { _OutputMode_MIN }
 #define ReqSetChannelConfig_init_zero \
   { false, ChannelConfig_init_zero }
 
 /* Field tags (for use in manual encoding/decoding) */
-#define AvailableConfigOptions_motor_types_tag 1
-#define AvailableConfigOptions_variable_voltage_tag 2
+#define AvailableDisplayConfigOptions_output_modes_tag 1
+#define AvailableChannelConfigOptions_motor_types_tag 1
+#define AvailableChannelConfigOptions_variable_voltage_tag 2
 #define ChannelConfig_channel_number_tag 1
 #define ChannelConfig_motor_type_tag 2
 #define ChannelConfig_voltage_tag 3
 #define DisplayConfig_output_mode_tag 1
 #define DisplayConfig_number_of_channels_tag 2
 #define DisplayConfig_channel_configs_tag 3
-#define ReqSetOutputMode_output_mode_tag 1
+#define ReqSetDisplayConfig_output_mode_tag 1
+#define AvailableConfigurationOptions_display_config_options_tag 1
+#define AvailableConfigurationOptions_channel_config_options_tag 2
 #define ReqSetChannelConfig_channel_config_tag 1
 
 /* Struct field encoding specification for nanopb */
@@ -120,16 +152,31 @@ extern "C" {
 #define DisplayConfig_DEFAULT NULL
 #define DisplayConfig_channel_configs_MSGTYPE ChannelConfig
 
-#define AvailableConfigOptions_FIELDLIST(X, a)    \
-  X(a, CALLBACK, REPEATED, UENUM, motor_types, 1) \
+#define AvailableChannelConfigOptions_FIELDLIST(X, a) \
+  X(a, CALLBACK, REPEATED, UENUM, motor_types, 1)     \
   X(a, STATIC, SINGULAR, BOOL, variable_voltage, 2)
-#define AvailableConfigOptions_CALLBACK pb_default_field_callback
-#define AvailableConfigOptions_DEFAULT NULL
+#define AvailableChannelConfigOptions_CALLBACK pb_default_field_callback
+#define AvailableChannelConfigOptions_DEFAULT NULL
 
-#define ReqSetOutputMode_FIELDLIST(X, a) \
+#define AvailableDisplayConfigOptions_FIELDLIST(X, a) \
+  X(a, CALLBACK, REPEATED, UENUM, output_modes, 1)
+#define AvailableDisplayConfigOptions_CALLBACK pb_default_field_callback
+#define AvailableDisplayConfigOptions_DEFAULT NULL
+
+#define AvailableConfigurationOptions_FIELDLIST(X, a)        \
+  X(a, STATIC, OPTIONAL, MESSAGE, display_config_options, 1) \
+  X(a, STATIC, OPTIONAL, MESSAGE, channel_config_options, 2)
+#define AvailableConfigurationOptions_CALLBACK NULL
+#define AvailableConfigurationOptions_DEFAULT NULL
+#define AvailableConfigurationOptions_display_config_options_MSGTYPE \
+  AvailableDisplayConfigOptions
+#define AvailableConfigurationOptions_channel_config_options_MSGTYPE \
+  AvailableChannelConfigOptions
+
+#define ReqSetDisplayConfig_FIELDLIST(X, a) \
   X(a, STATIC, SINGULAR, UENUM, output_mode, 1)
-#define ReqSetOutputMode_CALLBACK NULL
-#define ReqSetOutputMode_DEFAULT NULL
+#define ReqSetDisplayConfig_CALLBACK NULL
+#define ReqSetDisplayConfig_DEFAULT NULL
 
 #define ReqSetChannelConfig_FIELDLIST(X, a) \
   X(a, STATIC, OPTIONAL, MESSAGE, channel_config, 1)
@@ -139,23 +186,29 @@ extern "C" {
 
 extern const pb_msgdesc_t ChannelConfig_msg;
 extern const pb_msgdesc_t DisplayConfig_msg;
-extern const pb_msgdesc_t AvailableConfigOptions_msg;
-extern const pb_msgdesc_t ReqSetOutputMode_msg;
+extern const pb_msgdesc_t AvailableChannelConfigOptions_msg;
+extern const pb_msgdesc_t AvailableDisplayConfigOptions_msg;
+extern const pb_msgdesc_t AvailableConfigurationOptions_msg;
+extern const pb_msgdesc_t ReqSetDisplayConfig_msg;
 extern const pb_msgdesc_t ReqSetChannelConfig_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
 #define ChannelConfig_fields &ChannelConfig_msg
 #define DisplayConfig_fields &DisplayConfig_msg
-#define AvailableConfigOptions_fields &AvailableConfigOptions_msg
-#define ReqSetOutputMode_fields &ReqSetOutputMode_msg
+#define AvailableChannelConfigOptions_fields &AvailableChannelConfigOptions_msg
+#define AvailableDisplayConfigOptions_fields &AvailableDisplayConfigOptions_msg
+#define AvailableConfigurationOptions_fields &AvailableConfigurationOptions_msg
+#define ReqSetDisplayConfig_fields &ReqSetDisplayConfig_msg
 #define ReqSetChannelConfig_fields &ReqSetChannelConfig_msg
 
 /* Maximum encoded size of messages (where known) */
 /* DisplayConfig_size depends on runtime parameters */
-/* AvailableConfigOptions_size depends on runtime parameters */
+/* AvailableChannelConfigOptions_size depends on runtime parameters */
+/* AvailableDisplayConfigOptions_size depends on runtime parameters */
+/* AvailableConfigurationOptions_size depends on runtime parameters */
 #define ChannelConfig_size 13
 #define ReqSetChannelConfig_size 15
-#define ReqSetOutputMode_size 2
+#define ReqSetDisplayConfig_size 2
 
 #ifdef __cplusplus
 } /* extern "C" */

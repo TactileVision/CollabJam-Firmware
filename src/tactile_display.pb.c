@@ -10,8 +10,12 @@ PB_BIND(ChannelConfig, ChannelConfig, AUTO)
 
 PB_BIND(DisplayConfig, DisplayConfig, AUTO)
 
-PB_BIND(AvailableConfigOptions, AvailableConfigOptions, AUTO)
+PB_BIND(AvailableChannelConfigOptions, AvailableChannelConfigOptions, AUTO)
 
-PB_BIND(ReqSetOutputMode, ReqSetOutputMode, AUTO)
+PB_BIND(AvailableDisplayConfigOptions, AvailableDisplayConfigOptions, AUTO)
+
+PB_BIND(AvailableConfigurationOptions, AvailableConfigurationOptions, AUTO)
+
+PB_BIND(ReqSetDisplayConfig, ReqSetDisplayConfig, AUTO)
 
 PB_BIND(ReqSetChannelConfig, ReqSetChannelConfig, AUTO)
