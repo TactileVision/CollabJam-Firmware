@@ -1,29 +1,32 @@
 #ifndef BLE_PB_CALLBACK_H_
-#define BLE_CB_CALLBACK_H_
+#define BLE_PB_CALLBACK_H_
 #include <Arduino.h>
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEServer.h>
-#include <BLE2904.h>
-#include <ble.h>
+#include <BLECharacteristic.h>
 #include <pb_decode.h>
-#include <vtproto.pb.h>
 #include <vtproto.h>
-#include <vtproto_esp32.h>
-namespace tact
-{
-    namespace ble
-    {
+#include <vtproto.pb.h>
 
-        class VtprotoImidiateExecutionCallback : public BLECharacteristicCallbacks
-        {
+#include "interface/message_interface.h"
+#include "tacton/tacton_store.h"
+namespace tact {
+namespace ble {
 
-            void onWrite(BLECharacteristic *pCharacteristic);
-            void onRead(BLECharacteristic *pCharacteristic);
-        };
+class ReceiveVtprotoCallback : public BLECharacteristicCallbacks {
+ public:
+  ReceiveVtprotoCallback(tact::vtproto::MessageReceiver* receiver);
+  void onWrite(BLECharacteristic* pCharacteristic);
+  void onRead(BLECharacteristic* pCharacteristic);
+  void changeMessageReviecer(tact::vtproto::MessageReceiver* receiver);
 
-    } // namespace ble
+ private:
+  tact::vtproto::Tacton tacton_;
+  // tact::vtproto::MessageReceiver &message_receiver_;
+  tact::vtproto::MessageReceiver* message_receiver_;
+  // tact::vtproto::TactonStore* tacton_store_;
+};
 
-} // namespace tact
+}  // namespace ble
 
-#endif // !BLE_PB_CALLBACK_H_
+}  // namespace tact
+
+#endif  // !BLE_PB_CALLBACK_H_
