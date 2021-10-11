@@ -65,5 +65,9 @@ void ReceiveVtprotoCallback::onWrite(BLECharacteristic *pCharacteristic) {
   }
 }
 void ReceiveVtprotoCallback::onRead(BLECharacteristic *pCharacteristic) {}
+void ReceiveVtprotoCallback::changeMessageReviecer(
+    tact::vtproto::MessageReceiver *receiver) {
+  message_receiver_ = receiver;
+};
 }  // namespace ble
 }  // namespace tact

@@ -332,8 +332,8 @@ void ConfigOptionsCallbackHandler::onWrite(BLECharacteristic* pCharacteristic) {
     Serial.println("Decoding received ReqSetDisplayConfig message failed");
 #endif  // DEBUG
   }
-
   // TODO Check if received options are available for display
+  dce_->getDisplayConfig()->output_mode = rsdc.output_mode;
   dc_ble_characteristic_->setValue(dce_->getEncodedMessage(),
                                    dce_->getEncodedMessageLength());
   dc_ble_characteristic_->notify();

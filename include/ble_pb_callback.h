@@ -16,6 +16,7 @@ class ReceiveVtprotoCallback : public BLECharacteristicCallbacks {
   ReceiveVtprotoCallback(tact::vtproto::MessageReceiver* receiver);
   void onWrite(BLECharacteristic* pCharacteristic);
   void onRead(BLECharacteristic* pCharacteristic);
+  void changeMessageReviecer(tact::vtproto::MessageReceiver* receiver);
 
  private:
   tact::vtproto::Tacton tacton_;

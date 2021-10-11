@@ -35,7 +35,7 @@ OutputMode available_ouput_modes[kAvailableOutputModesLength] = {
     OutputMode_VTPROTO_TACTON, OutputMode_VTPROTO_REALTIME};
 MotorType available_motor_types[kAvailableMotorTypesLength] = {
     MotorType_ERM, MotorType_PNEUMATIC};
-OutputMode current_output_mode = OutputMode_VTPROTO_TACTON;
+OutputMode current_output_mode = OutputMode_VTPROTO_REALTIME;
 ChannelConfig channel_configs[kNumOfOutputs] = {
     {1, MotorType::MotorType_ERM, false, 0},
     {2, MotorType::MotorType_ERM, false, 0},
@@ -46,9 +46,11 @@ ChannelConfig channel_configs[kNumOfOutputs] = {
     {7, MotorType::MotorType_ERM, false, 0},
     {8, MotorType::MotorType_ERM, false, 0},
 };
+
 tact::vtproto::encode::DisplayConfigEncoder display_config_encoder(
     OutputMode::OutputMode_VTPROTO_REALTIME, tact::display::channel_configs,
     tact::display::kNumOfOutputs);
+OutputMode last_active_mode = OutputMode_VTPROTO_REALTIME;
 
 tact::vtproto::encode::ConfigOptionsEncoder config_options_encoder(
     tact::display::available_ouput_modes,
@@ -73,7 +75,7 @@ tact::vtproto::TactonReceiver tacton_receiver(
 tact::vtproto::ImmediateOutputMode immediate_output_mode(vtp_esp_interface);
 // tact::vtproto::ReceiveAndPlayTactonMode rec_and_play(vtp_esp_interface);
 // tact::ble::ReceiveVtprotoCallback vtp_ble_callback(&immediate_output_mode);
-tact::ble::ReceiveVtprotoCallback vtp_ble_callback(&tacton_receiver);
+tact::ble::ReceiveVtprotoCallback vtp_ble_callback(&immediate_output_mode);
 }  // namespace tact
 
 void setup() {
@@ -163,15 +165,40 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  // TODO Check if device is playing or not
-  if (tact::tacton_receiver.hasReceivedTacton()) {
+  // Check current mode
+  if (tact::display::last_active_mode !=
+      tact::display::display_config_encoder.getDisplayConfig()->output_mode) {
+    if (tact::display::last_active_mode == OutputMode_VTPROTO_TACTON) {
 #ifdef DEBUG_SERIAL
-    Serial.println("Received a tacton!");
+      Serial.println("Switching to Realtime Mode");
 #endif
-    // Play back tacton
-    tact::tacton_player_esp.play(tact::vtproto::tacton_store.getLastTacton());
+      tact::display::last_active_mode = OutputMode_VTPROTO_REALTIME;
+      tact::vtp_ble_callback.changeMessageReviecer(
+          &tact::immediate_output_mode);
 
-    tact::tacton_receiver.reset(tact::vtproto::tacton_store.getNewTacton());
+    } else {
+#ifdef DEBUG_SERIAL
+      Serial.println("Switching to Tacton Mode");
+#endif
+      tact::display::last_active_mode = OutputMode_VTPROTO_TACTON;
+      tact::tacton_receiver.reset(tact::vtproto::tacton_store.getNewTacton());
+      tact::vtp_ble_callback.changeMessageReviecer(&tact::tacton_receiver);
+      // Reset TactonReceiver?
+    }
+  }
+
+  if (tact::display::display_config_encoder.getDisplayConfig()->output_mode ==
+      OutputMode_VTPROTO_TACTON) {
+    // TODO Check if device is playing or not
+    if (tact::tacton_receiver.hasReceivedTacton()) {
+#ifdef DEBUG_SERIAL
+      Serial.println("Received a tacton!");
+#endif
+      // Play back tacton
+      tact::tacton_player_esp.play(tact::vtproto::tacton_store.getLastTacton());
+      tact::tacton_receiver.reset(tact::vtproto::tacton_store.getNewTacton());
+    }
+
+  } else {
   }
 }
