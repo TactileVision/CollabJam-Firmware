@@ -7,11 +7,13 @@
 #include <tacton/tacton_store.h>
 #include <vtproto_handler/tacton_receiver.h>
 
+#include "SPIFFS.h"
 #include "ble_pb_callback.h"
 #include "esp32_vtproto_interface.h"
 #include "tactile_display.h"
 #include "tactile_display.pb.h"
 #include "tacton_player_esp.h"
+#include "vtproto_file_source.h"
 
 namespace tact {
 namespace vtproto {
@@ -35,7 +37,7 @@ OutputMode available_ouput_modes[kAvailableOutputModesLength] = {
     OutputMode_VTPROTO_TACTON, OutputMode_VTPROTO_REALTIME};
 MotorType available_motor_types[kAvailableMotorTypesLength] = {
     MotorType_ERM, MotorType_PNEUMATIC};
-OutputMode current_output_mode = OutputMode_VTPROTO_REALTIME;
+OutputMode current_output_mode = OutputMode_VTPROTO_TACTON;
 ChannelConfig channel_configs[kNumOfOutputs] = {
     {1, MotorType::MotorType_ERM, false, 0},
     {2, MotorType::MotorType_ERM, false, 0},
@@ -48,9 +50,9 @@ ChannelConfig channel_configs[kNumOfOutputs] = {
 };
 
 tact::vtproto::encode::DisplayConfigEncoder display_config_encoder(
-    OutputMode::OutputMode_VTPROTO_REALTIME, tact::display::channel_configs,
+    current_output_mode, tact::display::channel_configs,
     tact::display::kNumOfOutputs);
-OutputMode last_active_mode = OutputMode_VTPROTO_REALTIME;
+OutputMode last_active_mode = current_output_mode;
 
 tact::vtproto::encode::ConfigOptionsEncoder config_options_encoder(
     tact::display::available_ouput_modes,
@@ -76,6 +78,8 @@ tact::vtproto::ImmediateOutputMode immediate_output_mode(vtp_esp_interface);
 // tact::vtproto::ReceiveAndPlayTactonMode rec_and_play(vtp_esp_interface);
 // tact::ble::ReceiveVtprotoCallback vtp_ble_callback(&immediate_output_mode);
 tact::ble::ReceiveVtprotoCallback vtp_ble_callback(&immediate_output_mode);
+// tact::ble::ReceiveVtprotoCallback vtp_ble_callback(&tacton_receiver);
+tact::vtproto::VtprotoFileSource file_source;
 }  // namespace tact
 
 void setup() {
@@ -84,6 +88,9 @@ void setup() {
   while (!Serial) {
   }
 #endif
+
+  tact::file_source.loadTactonFromFile("/test.tacton", &tact::tacton_receiver);
+
   BLEDevice::init(tact::ble::kDeviceName);
   BLEServer* server = BLEDevice::createServer();
   server->setCallbacks(new tact::ble::BleConnectionCallback());
@@ -199,6 +206,9 @@ void loop() {
       // Play back tacton
       tact::tacton_player_esp.play(tact::vtproto::tacton_store.getLastTacton());
       tact::tacton_receiver.reset(tact::vtproto::tacton_store.getNewTacton());
+      delay(1000);
+      tact::file_source.loadTactonFromFile("/test.tacton",
+                                           &tact::tacton_receiver);
     }
 
   } else {
