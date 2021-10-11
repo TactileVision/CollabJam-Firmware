@@ -87,6 +87,8 @@ void setup() {
   BLEDevice::init(tact::ble::kDeviceName);
   BLEServer* server = BLEDevice::createServer();
   server->setCallbacks(new tact::ble::BleConnectionCallback());
+  BLEDevice::setPower(ESP_PWR_LVL_P9, ESP_BLE_PWR_TYPE_ADV);
+  BLEDevice::setPower(ESP_PWR_LVL_P9, ESP_BLE_PWR_TYPE_SCAN);
 
   BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->setScanResponse(true);
