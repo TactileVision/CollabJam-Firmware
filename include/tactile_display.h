@@ -6,10 +6,13 @@
 #include <pb_encode.h>
 
 #include "tactile_display.pb.h"
+// TODO Make all smart structs into classes
 namespace tact {
 
 namespace vtproto {
 namespace encode {
+const uint8_t kMaxStrLen = 64;
+const uint8_t kMaxTacton = 32;
 typedef struct ChannelConfigEncode_t {
   ChannelConfig* channel_configs_;
   uint32_t number_of_channels_;
@@ -25,6 +28,20 @@ typedef struct ChannelConfigOptionsEncode_t {
   uint8_t number_of_types_;
   bool has_voltage;
 } ChannelConfigOptionsEncode_t;
+
+typedef struct TactonFileInformationEncode_t {
+  // TactonFileInformation* tfi_;
+  uint8_t max_length_ = kMaxStrLen;
+  uint8_t filename_length_, author_length_, pattern_name_length_;
+  char filename_[kMaxStrLen] = {0};
+  char author_[kMaxStrLen] = {0};
+  char pattern_name_[kMaxStrLen] = {0};
+} TactonFileInformationEncode_t;
+
+typedef struct TactonFileInformationListEncode_t {
+  TactonFileInformation* tfi_;
+  uint8_t number_of_files_;
+} TactonFileInformationListEncode_t;
 
 typedef struct DisplayConfigEncoder {
  private:
@@ -74,6 +91,33 @@ typedef struct ConfigOptionsEncoder {
   }
 } ConfigOptionsEncoder;
 
+class TactonFileInformationListEncoder {
+ public:
+  TactonFileInformationListEncoder();
+  uint8_t* getEncodedMessage();
+  uint8_t getEncodedMessageLength() { return enc_msg_length_; }
+  bool addTactonFileInformation(TactonFileInformationEncode_t tfi,
+                                uint32_t duration_ms, uint32_t n_instructions,
+                                uint32_t n_channels);
+
+ private:
+  uint8_t buffer_[512] = {0};
+  uint8_t enc_msg_length_ = 0;
+  uint8_t tfi_enc_len_ = 0;
+  TactonFileInformationEncode_t tfi_encode_[kMaxTacton];
+  TactonFileInformation tfi_[kMaxTacton];
+  TactonFileInformationList tfil_;
+  TactonFileInformationListEncode_t tfil_encode_;
+  static bool encodeTactonFileInformationList(pb_ostream_t* stream,
+                                              const pb_field_iter_t* field,
+                                              void* const* arg);
+  static bool encodeFilename(pb_ostream_t* stream, const pb_field_iter_t* field,
+                             void* const* arg);
+  static bool encodeAuthor(pb_ostream_t* stream, const pb_field_iter_t* field,
+                           void* const* arg);
+  static bool encodePatternName(pb_ostream_t* stream,
+                                const pb_field_iter_t* field, void* const* arg);
+};
 }  // namespace encode
 
 }  // namespace vtproto

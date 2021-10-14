@@ -19,3 +19,9 @@ PB_BIND(AvailableConfigurationOptions, AvailableConfigurationOptions, AUTO)
 PB_BIND(ReqSetDisplayConfig, ReqSetDisplayConfig, AUTO)
 
 PB_BIND(ReqSetChannelConfig, ReqSetChannelConfig, AUTO)
+
+PB_BIND(TactonFileInformation, TactonFileInformation, AUTO)
+
+PB_BIND(TactonFileInformationList, TactonFileInformationList, AUTO)
+
+PB_BIND(ReqPlayTactonFile, ReqPlayTactonFile, AUTO)

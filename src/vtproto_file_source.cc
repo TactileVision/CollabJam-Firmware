@@ -16,41 +16,37 @@ VtprotoFileSource::VtprotoFileSource() {
   //   }
 }
 VtprotoFileSource::~VtprotoFileSource() {}
-void VtprotoFileSource::loadTactonFromFile(
-    char* filename, tact::vtproto::MessageReceiver* messageReceiver) {
+bool VtprotoFileSource::init() {
   if (!SPIFFS.begin(true)) {
 #ifdef DEBUG_SERIAL
     Serial.println("An Error has occurred while mounting SPIFFS");
 #endif
     init_ = false;
     // error_ = true;
-    return;
   } else {
     init_ = true;
   }
+  return init_;
+}
+void VtprotoFileSource::loadTactonFromFile(
+    char* filename, tact::vtproto::MessageReceiver* messageReceiver) {
+  if (!init_) {
+    if (!init()) return;
+  }
 
-#ifdef DEBUG_SERIAL
-  Serial.println(init_);
-#endif  // DEBUG
   File file = SPIFFS.open(filename);
   if (!file) {
 #ifdef DEBUG_SERIAL
     Serial.println("Failed to open file for reading");
 #endif  // DEBUG
-        // error_ = true;
     return;
   }
 
-  // buffer  reset?
-  // #ifdef DEBUG_SERIAL
-  //   Serial.println(file.size());
-  // #endif  // DEBUG
   file.readBytes(buf_, file.size());
   pb_istream_t f_pb = pb_istream_from_buffer((pb_byte_t*)buf_, file.size());
   file.close();
 
   tact::vtproto::TactonHeader th;
-
   th.file_header_ =
       tact::vtproto::decode::getHeader(th.pattern_name_, th.author_);
   pb_decode_ex(&f_pb, FileHeader_fields, &th.file_header_, PB_DECODE_DELIMITED);
@@ -65,6 +61,44 @@ void VtprotoFileSource::loadTactonFromFile(
   }
 }
 
+bool VtprotoFileSource::getTactonHeader(char* filename,
+                                        tact::vtproto::TactonHeader& dest) {
+  if (!init_) {
+    if (!init()) {
+      return false;
+    }
+  }
+
+  File file = SPIFFS.open(filename);
+  if (!file) {
+#ifdef DEBUG_SERIAL
+    Serial.println("Failed to open file for reading");
+#endif  // DEBUG
+    return false;
+  }
+
+  file.readBytes(buf_, file.size());
+  pb_istream_t f_pb = pb_istream_from_buffer((pb_byte_t*)buf_, file.size());
+  file.close();
+
+  // tact::vtproto::TactonHeader th;
+  // th.file_header_ =
+  //     tact::vtproto::decode::getHeader(th.pattern_name_, th.author_);
+  pb_decode_ex(&f_pb, FileHeader_fields, &dest.file_header_,
+               PB_DECODE_DELIMITED);
+
+  // return th;
+  // memcpy(dest.filename_, filename, kMaxTextLength);
+  // dest.filename_length_ = kMaxTextLength;
+
+  // memcpy(dest.author_, th.author_, kMaxTextLength);
+  // memcpy(dest.pattern_name_, th.pattern_name_, kMaxTextLength);
+  // dest.author_length_ = kMaxTextLength;
+  // dest.pattern_name_length_ = kMaxTextLength;
+
+  // dest.max_length_ = kMaxTextLength;
+  return true;
+}
 }  // namespace vtproto
 
 }  // namespace tact

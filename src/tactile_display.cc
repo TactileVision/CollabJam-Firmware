@@ -301,6 +301,149 @@ uint8_t* ConfigOptionsEncoder::getEncodedMessage() {
   }
   return buffer_;
 }
+
+TactonFileInformationListEncoder::TactonFileInformationListEncoder() {
+  tfil_.file_information.arg = &tfil_encode_;
+  tfil_encode_.tfi_ = &tfi_[0];
+  tfil_.file_information.funcs.encode =
+      TactonFileInformationListEncoder::encodeTactonFileInformationList;
+}
+
+bool TactonFileInformationListEncoder::addTactonFileInformation(
+    TactonFileInformationEncode_t tfi, uint32_t duration_ms,
+    uint32_t n_instructions, uint32_t n_channels) {
+  if (tfi_enc_len_ >= kMaxTacton) {
+#ifdef DEBUG_SERIAL
+    Serial.println("Maximum number of file information reached! Aborting.");
+#endif  // DEBUG
+    return false;
+  }
+  tfi_[tfi_enc_len_] = TactonFileInformation_init_default;
+  tfi_[tfi_enc_len_].duration_ms = duration_ms;
+  tfi_[tfi_enc_len_].n_instructions = n_instructions;
+  tfi_[tfi_enc_len_].n_channels = n_channels;
+
+  // TODO Check if string length is bigger then kMaxStrLen
+  tfi_encode_[tfi_enc_len_].max_length_ = kMaxStrLen;
+  strncpy(tfi_encode_[tfi_enc_len_].filename_, tfi.filename_,
+          tfi.filename_length_);
+  strncpy(tfi_encode_[tfi_enc_len_].author_, tfi.author_, tfi.author_length_);
+  strncpy(tfi_encode_[tfi_enc_len_].pattern_name_, tfi.pattern_name_,
+          tfi.pattern_name_length_);
+
+  tfi_encode_[tfi_enc_len_].author_length_ = tfi.author_length_;
+  tfi_encode_[tfi_enc_len_].pattern_name_length_ = tfi.pattern_name_length_;
+  tfi_encode_[tfi_enc_len_].filename_length_ = tfi.filename_length_;
+
+  tfi_[tfi_enc_len_].filename.arg = &tfi_encode_[tfi_enc_len_];
+  tfi_[tfi_enc_len_].filename.funcs.encode =
+      TactonFileInformationListEncoder::encodeFilename;
+  tfi_[tfi_enc_len_].author.arg = &tfi_encode_[tfi_enc_len_];
+  tfi_[tfi_enc_len_].author.funcs.encode =
+      TactonFileInformationListEncoder::encodeAuthor;
+  tfi_[tfi_enc_len_].pattern_name.arg = &tfi_encode_[tfi_enc_len_];
+  tfi_[tfi_enc_len_].pattern_name.funcs.encode =
+      TactonFileInformationListEncoder::encodePatternName;
+
+  tfi_enc_len_++;
+  tfil_.number_of_messages = tfi_enc_len_;
+  tfil_encode_.number_of_files_ = tfi_enc_len_;
+  return true;
+}
+
+bool TactonFileInformationListEncoder::encodeTactonFileInformationList(
+    pb_ostream_t* stream, const pb_field_iter_t* field, void* const* arg) {
+  // Encode Field tag
+  TactonFileInformationListEncode_t* t =
+      (TactonFileInformationListEncode_t*)(*arg);
+  Serial.print("Encoding Tacton File Information List with ");
+  Serial.print(t->number_of_files_);
+  Serial.println(" files");
+
+  for (uint8_t i = 0; i < t->number_of_files_; i++) {
+    // write tag
+    if (!pb_encode_tag(stream, PB_WT_STRING, field->tag)) {
+#ifdef DEBUG_SERIAL
+#ifndef UNIT_TEST
+      const char* error = PB_GET_ERROR(stream);
+      // Serial.printf("output id encoding error: %s\n", error);
+      Serial.print("output id encoding error: ");
+      Serial.println(error);
+#endif  // UNIT_TEST
+#endif  // DEBUG
+      return false;
+    }
+    // write data
+    if (!pb_encode_submessage(stream, TactonFileInformation_fields,
+                              &t->tfi_[i])) {
+#ifdef DEBUG_SERIAL
+#ifndef UNIT_TEST
+      const char* error = PB_GET_ERROR(stream);
+      // Serial.printf("output id encoding error: %s\n", error);
+      Serial.print("output id encoding error: ");
+      Serial.println(error);
+#endif  // UNIT_TEST
+#endif  // DEBUG
+      return false;
+    }
+  }
+  return true;
+}
+
+bool TactonFileInformationListEncoder::encodeFilename(
+    pb_ostream_t* stream, const pb_field_iter_t* field, void* const* arg) {
+  Serial.println("encoding  tfi filename");
+  TactonFileInformationEncode_t* tfi_enc =
+      (TactonFileInformationEncode_t*)*(arg);
+  if (!pb_encode_tag_for_field(stream, field)) return false;
+  return pb_encode_string(stream, (uint8_t*)tfi_enc->filename_,
+                          tfi_enc->filename_length_);
+}
+
+bool TactonFileInformationListEncoder::encodeAuthor(
+    pb_ostream_t* stream, const pb_field_iter_t* field, void* const* arg) {
+  Serial.println("encoding  tfi author");
+  TactonFileInformationEncode_t* tfi_enc =
+      (TactonFileInformationEncode_t*)*(arg);
+  if (!pb_encode_tag_for_field(stream, field)) return false;
+  return pb_encode_string(stream, (uint8_t*)tfi_enc->author_,
+                          tfi_enc->author_length_);
+}
+
+bool TactonFileInformationListEncoder::encodePatternName(
+    pb_ostream_t* stream, const pb_field_iter_t* field, void* const* arg) {
+  Serial.println("encoding  tfi pattern name");
+  TactonFileInformationEncode_t* tfi_enc =
+      (TactonFileInformationEncode_t*)*(arg);
+  if (!pb_encode_tag_for_field(stream, field)) return false;
+  return pb_encode_string(stream, (uint8_t*)tfi_enc->pattern_name_,
+                          tfi_enc->pattern_name_length_);
+}
+
+uint8_t* TactonFileInformationListEncoder::getEncodedMessage() {
+  bool status;
+  pb_ostream_t stream = pb_ostream_from_buffer(buffer_, sizeof(buffer_));
+  status = pb_encode(&stream, TactonFileInformationList_fields, &tfil_);
+  enc_msg_length_ = stream.bytes_written;
+
+  if (!status) {
+    Serial.print("Encoding failed: ");
+    Serial.println(PB_GET_ERROR(&stream));
+  } else {
+    Serial.print(enc_msg_length_);
+    Serial.println(" Bytes written");
+    for (uint32_t i = 0; i < enc_msg_length_; i++) {
+      if (buffer_[i] < 16) {
+        Serial.print("0");
+      }
+
+      Serial.print(buffer_[i], HEX);
+      Serial.print(" ");
+    }
+    Serial.println();
+  }
+  return buffer_;
+}
 }  // namespace encode
 
 }  // namespace vtproto
