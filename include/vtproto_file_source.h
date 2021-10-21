@@ -6,7 +6,7 @@
 #include "SPIFFS.h"
 #include "pb_decode.h"
 #include "tactile_display.h"
-#include "tacton.h"
+#include "tacton/tacton.h"
 /*
 Store binary tacton files in the /data folder and upload them to the esp via
 project tasks: Platform > Build Filesystem Image
