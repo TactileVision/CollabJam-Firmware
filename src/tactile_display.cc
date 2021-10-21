@@ -470,7 +470,8 @@ void ConfigOptionsCallbackHandler::onWrite(BLECharacteristic* pCharacteristic) {
   ReqSetDisplayConfig rsdc = ReqSetDisplayConfig_init_zero;
   pb_istream_t is = pb_istream_from_buffer(
       pCharacteristic->getData(), pCharacteristic->getValue().length());
-  if (!pb_decode(&is, ReqSetDisplayConfig_fields, &rsdc)) {
+  if (!pb_decode_ex(&is, ReqSetDisplayConfig_fields, &rsdc,
+                    PB_DECODE_DELIMITED)) {
 #ifdef DEBUG_SERIAL
     Serial.println("Decoding received ReqSetDisplayConfig message failed");
 #endif  // DEBUG
