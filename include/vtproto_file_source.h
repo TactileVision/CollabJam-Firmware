@@ -13,11 +13,14 @@ project tasks: Platform > Build Filesystem Image
 */
 namespace tact {
 namespace vtproto {
-const uint16_t kMaxBufferSize = 256;
+
+#ifndef FILE_MAX_SIZE
+#define FILE_MAX_SIZE 256
+#endif
 class VtprotoFileSource {
  private:
   bool init_ = false;
-  char buf_[kMaxBufferSize];
+  char buf_[FILE_MAX_SIZE];
   bool init();
 
  public:

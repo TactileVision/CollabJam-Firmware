@@ -312,7 +312,7 @@ TactonFileInformationListEncoder::TactonFileInformationListEncoder() {
 bool TactonFileInformationListEncoder::addTactonFileInformation(
     TactonFileInformationEncode_t tfi, uint32_t duration_ms,
     uint32_t n_instructions, uint32_t n_channels) {
-  if (tfi_enc_len_ >= kMaxTacton) {
+  if (tfi_enc_len_ >= STORED_TACTONS_MAX_NUMBER) {
 #ifdef DEBUG_SERIAL
     Serial.println("Maximum number of file information reached! Aborting.");
 #endif  // DEBUG
@@ -324,7 +324,7 @@ bool TactonFileInformationListEncoder::addTactonFileInformation(
   tfi_[tfi_enc_len_].n_channels = n_channels;
 
   // TODO Check if string length is bigger then kMaxStrLen
-  tfi_encode_[tfi_enc_len_].max_length_ = kMaxStrLen;
+  tfi_encode_[tfi_enc_len_].max_length_ = STORED_TACTONS_HEADER_MAX_STRLEN;
   strncpy(tfi_encode_[tfi_enc_len_].filename_, tfi.filename_,
           tfi.filename_length_);
   strncpy(tfi_encode_[tfi_enc_len_].author_, tfi.author_, tfi.author_length_);

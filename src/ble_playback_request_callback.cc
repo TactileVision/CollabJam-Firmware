@@ -6,7 +6,7 @@ namespace ble {
 ReceivePlaybackRequestCallback::ReceivePlaybackRequestCallback(
     tact::vtproto::FileRequestReceiver* receiver)
     : receiver_(receiver) {
-  buf_[0] = kPlaybackRequestMaxLength;
+  buf_[0] = config::ble::kReceivePlaybackRequestBufSize;
 }
 void ReceivePlaybackRequestCallback::onWrite(
     BLECharacteristic* pCharacteristic) {
