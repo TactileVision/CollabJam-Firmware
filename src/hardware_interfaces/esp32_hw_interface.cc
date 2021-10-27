@@ -1,4 +1,4 @@
-#include "esp32_vtproto_interface.h"
+#include "hardware_interfaces/esp32_hw_interface.h"
 
 EspVtprotoHardwareInterface::EspVtprotoHardwareInterface(
     uint8_t number_of_actuators, uint8_t* channel_to_pin_map) {

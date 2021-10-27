@@ -11,7 +11,8 @@
 #include "ble_pb_callback.h"
 #include "ble_playback_request_callback.h"
 #include "config.h"
-#include "esp32_vtproto_interface.h"
+// #include "hardware_interfaces/esp32_hw_interface.h"
+#include "hardware_interfaces/i2c_mp_drv_hw_interface.h"
 #include "playback_request_receiver.h"
 #include "tactile_display.h"
 #include "tactile_display.pb.h"
@@ -26,11 +27,11 @@ ChannelConfig channel_configs[config::display::kNumOfOutputs] = {
     {1, MotorType::MotorType_ERM, false, 0},
     {2, MotorType::MotorType_ERM, false, 0},
     {3, MotorType::MotorType_ERM, false, 0},
-    {4, MotorType::MotorType_ERM, false, 0},
-    {5, MotorType::MotorType_ERM, false, 0},
-    {6, MotorType::MotorType_ERM, false, 0},
-    {7, MotorType::MotorType_ERM, false, 0},
-    {8, MotorType::MotorType_ERM, false, 0},
+    // {4, MotorType::MotorType_ERM, false, 0},
+    // {5, MotorType::MotorType_ERM, false, 0},
+    // {6, MotorType::MotorType_ERM, false, 0},
+    // {7, MotorType::MotorType_ERM, false, 0},
+    // {8, MotorType::MotorType_ERM, false, 0},
 };
 }  // namespace
 namespace tact {
@@ -59,7 +60,10 @@ tact::ble::ConfigOptionsCallbackHandler config_options_callback_handler(
     tact::display::config_options_encoder.getAvalilableConfigurationOptions());
 }  // namespace ble
 
-EspVtprotoHardwareInterface vtp_esp_interface(
+// EspVtprotoHardwareInterface vtp_esp_interface(
+//     (uint8_t)config::display::kNumOfOutputs,
+//     (uint8_t*)config::display::kMotorPins);
+tact::I2CMultiplexerDrvInterface vtp_esp_interface(
     (uint8_t)config::display::kNumOfOutputs,
     (uint8_t*)config::display::kMotorPins);
 tact::vtproto::TactonPlayerESP tacton_player_esp(vtp_esp_interface);
@@ -123,6 +127,7 @@ void setup() {
   // Encode Message in characteristic
   //   tact::file_source.loadTactonFromFile("/test.tacton",
   //   &tact::tacton_receiver);
+  tact::vtp_esp_interface.init();
 
   BLEDevice::init(config::ble::kDeviceName);
   BLEServer* server = BLEDevice::createServer();
