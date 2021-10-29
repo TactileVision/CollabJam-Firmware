@@ -5,11 +5,11 @@
 #include <interface/file_interface.h>
 #include <pb_decode.h>
 
+#include "config.h"
 #include "tactile_display.pb.h"
 
 namespace tact {
 namespace ble {
-const uint8_t kPlaybackRequestMaxLength = 35;
 
 class ReceivePlaybackRequestCallback : public BLECharacteristicCallbacks {
  public:
@@ -18,7 +18,7 @@ class ReceivePlaybackRequestCallback : public BLECharacteristicCallbacks {
   void onRead(BLECharacteristic* pCharacteristic);
 
  private:
-  uint8_t buf_[kPlaybackRequestMaxLength] = {0};
+  uint8_t buf_[config::ble::kReceivePlaybackRequestBufSize] = {0};
   tact::vtproto::FileRequestReceiver* receiver_;
   static bool callbackDecodeString(pb_istream_t* stream,
                                    const pb_field_t* field, void** arg);

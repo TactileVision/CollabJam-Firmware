@@ -1,0 +1,12 @@
+[submodule "lib/esp32-ble-controller"]
+	path = lib/esp32-ble-controller
+	url = git@gitlab.com:taktiles-sehen/forschung-und-entwicklung/iss/firmware/platformio-libraries/esp32-ble-controller.git
+[submodule "lib/ble-service-definitions"]
+	path = lib/ble-service-definitions
+	url = git@gitlab.com:taktiles-sehen/forschung-und-entwicklung/iss/firmware/platformio-libraries/bluetooth/ble-service-definitions.git
+[submodule "lib/vtproto-lib"]
+	path = lib/vtproto-lib
+	url = git@gitlab.com:taktiles-sehen/forschung-und-entwicklung/iss/firmware/platformio-libraries/vtproto/vtproto-lib.git
+[submodule "lib/i2c-components"]
+	path = lib/i2c-components
+	url = git@gitlab.com:taktiles-sehen/forschung-und-entwicklung/iss/firmware/platformio-libraries/i2c-components.git

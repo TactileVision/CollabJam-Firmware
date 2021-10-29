@@ -11,8 +11,15 @@ namespace tact {
 
 namespace vtproto {
 namespace encode {
-const uint8_t kMaxStrLen = 64;
-const uint8_t kMaxTacton = 32;
+
+#ifndef STORED_TACTONS_MAX_NUMBER
+#define STORED_TACTONS_MAX_NUMBER 8
+#endif
+
+#ifndef STORED_TACTONS_HEADER_MAX_STRLEN
+#define STORED_TACTONS_HEADER_MAX_STRLEN 64
+#endif
+
 typedef struct ChannelConfigEncode_t {
   ChannelConfig* channel_configs_;
   uint32_t number_of_channels_;
@@ -31,11 +38,11 @@ typedef struct ChannelConfigOptionsEncode_t {
 
 typedef struct TactonFileInformationEncode_t {
   // TactonFileInformation* tfi_;
-  uint8_t max_length_ = kMaxStrLen;
+  uint8_t max_length_ = STORED_TACTONS_HEADER_MAX_STRLEN;
   uint8_t filename_length_, author_length_, pattern_name_length_;
-  char filename_[kMaxStrLen] = {0};
-  char author_[kMaxStrLen] = {0};
-  char pattern_name_[kMaxStrLen] = {0};
+  char filename_[STORED_TACTONS_HEADER_MAX_STRLEN] = {0};
+  char author_[STORED_TACTONS_HEADER_MAX_STRLEN] = {0};
+  char pattern_name_[STORED_TACTONS_HEADER_MAX_STRLEN] = {0};
 } TactonFileInformationEncode_t;
 
 typedef struct TactonFileInformationListEncode_t {
@@ -61,7 +68,7 @@ typedef struct DisplayConfigEncoder {
   // uint8_t getBufferSize() { return sizeof(buffer_) / sizeof(buffer_[0]); }
   uint8_t getEncodedMessageLength() { return enc_msg_length_; }
   DisplayConfig* getDisplayConfig() { return &dc_; };
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
   void print();
 #endif  // DEBUG
 } DisplayConfigEncoder;
@@ -104,8 +111,8 @@ class TactonFileInformationListEncoder {
   uint8_t buffer_[512] = {0};
   uint8_t enc_msg_length_ = 0;
   uint8_t tfi_enc_len_ = 0;
-  TactonFileInformationEncode_t tfi_encode_[kMaxTacton];
-  TactonFileInformation tfi_[kMaxTacton];
+  TactonFileInformationEncode_t tfi_encode_[STORED_TACTONS_MAX_NUMBER];
+  TactonFileInformation tfi_[STORED_TACTONS_MAX_NUMBER];
   TactonFileInformationList tfil_;
   TactonFileInformationListEncode_t tfil_encode_;
   static bool encodeTactonFileInformationList(pb_ostream_t* stream,

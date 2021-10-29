@@ -27,7 +27,7 @@ bool DisplayConfigEncoder::encodeDisplayConfig(pb_ostream_t* stream,
 
   for (uint32_t i = 0; i < c->number_of_channels_; i++) {
     if (!pb_encode_tag(stream, PB_WT_STRING, field->tag)) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
 #ifndef UNIT_TEST
       const char* error = PB_GET_ERROR(stream);
       Serial.print("output id encoding error: ");
@@ -38,7 +38,7 @@ bool DisplayConfigEncoder::encodeDisplayConfig(pb_ostream_t* stream,
     }
     if (!pb_encode_submessage(stream, ChannelConfig_fields,
                               &c->channel_configs_[i])) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
 #ifndef UNIT_TEST
       const char* error = PB_GET_ERROR(stream);
       Serial.print("Channel config encoding error: ");
@@ -70,7 +70,7 @@ uint8_t* DisplayConfigEncoder::getEncodedMessage() {
   }
   return buffer_;
 }
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
 void DisplayConfigEncoder::print() {
   Serial.print("Encoder stored output mode: ");
   Serial.println(output_mode_);
@@ -138,7 +138,7 @@ bool ConfigOptionsEncoder::encodeChannelConfig(pb_ostream_t* stream,
   size_t size;
   for (uint8_t i = 0; i < c->number_of_types_; i++) {
     if (!pb_encode_varint(&substream, (uint64_t)c->motor_types_[i])) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
 #ifndef UNIT_TEST
       const char* error = PB_GET_ERROR(stream);
       // Serial.printf("output id encoding error: %s\n", error);
@@ -150,7 +150,7 @@ bool ConfigOptionsEncoder::encodeChannelConfig(pb_ostream_t* stream,
     }
   }
   size = substream.bytes_written;
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
 #ifndef UNIT_TEST
   // Serial.printf("substream bytes written: %i\n", size);
   Serial.print("substream bytes written: ");
@@ -164,7 +164,7 @@ bool ConfigOptionsEncoder::encodeChannelConfig(pb_ostream_t* stream,
 
   // write tag
   if (!pb_encode_tag(stream, PB_WT_STRING, field->tag)) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
 #ifndef UNIT_TEST
     const char* error = PB_GET_ERROR(stream);
     // Serial.printf("output id encoding error: %s\n", error);
@@ -177,7 +177,7 @@ bool ConfigOptionsEncoder::encodeChannelConfig(pb_ostream_t* stream,
 
   // write size
   if (!pb_encode_varint(stream, size)) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
 #ifndef UNIT_TEST
     const char* error = PB_GET_ERROR(stream);
     // Serial.printf("output id encoding error: %s\n", error);
@@ -190,7 +190,7 @@ bool ConfigOptionsEncoder::encodeChannelConfig(pb_ostream_t* stream,
   // write data
   for (uint8_t i = 0; i < c->number_of_types_; i++) {
     if (!pb_encode_varint(stream, (uint64_t)c->motor_types_[i])) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
 #ifndef UNIT_TEST
       const char* error = PB_GET_ERROR(stream);
       // Serial.printf("output id encoding error: %s\n", error);
@@ -215,7 +215,7 @@ bool ConfigOptionsEncoder::encodeDisplayConfig(pb_ostream_t* stream,
   size_t size;
   for (uint8_t i = 0; i < d->number_of_modes_; i++) {
     if (!pb_encode_varint(&substream, (uint64_t)d->output_modes_[i])) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
 #ifndef UNIT_TEST
       const char* error = PB_GET_ERROR(stream);
       // Serial.printf("output id encoding error: %s\n", error);
@@ -227,7 +227,7 @@ bool ConfigOptionsEncoder::encodeDisplayConfig(pb_ostream_t* stream,
     }
   }
   size = substream.bytes_written;
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
 #ifndef UNIT_TEST
   // Serial.printf("substream bytes written: %i\n", size);
   Serial.print("substream bytes written: ");
@@ -241,7 +241,7 @@ bool ConfigOptionsEncoder::encodeDisplayConfig(pb_ostream_t* stream,
 
   // write tag
   if (!pb_encode_tag(stream, PB_WT_STRING, field->tag)) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
 #ifndef UNIT_TEST
     const char* error = PB_GET_ERROR(stream);
     // Serial.printf("output id encoding error: %s\n", error);
@@ -254,7 +254,7 @@ bool ConfigOptionsEncoder::encodeDisplayConfig(pb_ostream_t* stream,
 
   // write size
   if (!pb_encode_varint(stream, size)) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
 #ifndef UNIT_TEST
     const char* error = PB_GET_ERROR(stream);
     // Serial.printf("output id encoding error: %s\n", error);
@@ -267,7 +267,7 @@ bool ConfigOptionsEncoder::encodeDisplayConfig(pb_ostream_t* stream,
   // write data
   for (uint8_t i = 0; i < d->number_of_modes_; i++) {
     if (!pb_encode_varint(stream, (uint64_t)d->output_modes_[i])) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
 #ifndef UNIT_TEST
       const char* error = PB_GET_ERROR(stream);
       // Serial.printf("output id encoding error: %s\n", error);
@@ -312,8 +312,8 @@ TactonFileInformationListEncoder::TactonFileInformationListEncoder() {
 bool TactonFileInformationListEncoder::addTactonFileInformation(
     TactonFileInformationEncode_t tfi, uint32_t duration_ms,
     uint32_t n_instructions, uint32_t n_channels) {
-  if (tfi_enc_len_ >= kMaxTacton) {
-#ifdef DEBUG_SERIAL
+  if (tfi_enc_len_ >= STORED_TACTONS_MAX_NUMBER) {
+#ifdef DEBUG
     Serial.println("Maximum number of file information reached! Aborting.");
 #endif  // DEBUG
     return false;
@@ -324,7 +324,7 @@ bool TactonFileInformationListEncoder::addTactonFileInformation(
   tfi_[tfi_enc_len_].n_channels = n_channels;
 
   // TODO Check if string length is bigger then kMaxStrLen
-  tfi_encode_[tfi_enc_len_].max_length_ = kMaxStrLen;
+  tfi_encode_[tfi_enc_len_].max_length_ = STORED_TACTONS_HEADER_MAX_STRLEN;
   strncpy(tfi_encode_[tfi_enc_len_].filename_, tfi.filename_,
           tfi.filename_length_);
   strncpy(tfi_encode_[tfi_enc_len_].author_, tfi.author_, tfi.author_length_);
@@ -363,7 +363,7 @@ bool TactonFileInformationListEncoder::encodeTactonFileInformationList(
   for (uint8_t i = 0; i < t->number_of_files_; i++) {
     // write tag
     if (!pb_encode_tag(stream, PB_WT_STRING, field->tag)) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
 #ifndef UNIT_TEST
       const char* error = PB_GET_ERROR(stream);
       // Serial.printf("output id encoding error: %s\n", error);
@@ -376,7 +376,7 @@ bool TactonFileInformationListEncoder::encodeTactonFileInformationList(
     // write data
     if (!pb_encode_submessage(stream, TactonFileInformation_fields,
                               &t->tfi_[i])) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
 #ifndef UNIT_TEST
       const char* error = PB_GET_ERROR(stream);
       // Serial.printf("output id encoding error: %s\n", error);
@@ -463,15 +463,16 @@ ConfigOptionsCallbackHandler::ConfigOptionsCallbackHandler(
     : dce_(dce), aoc_(aoc) {}
 
 void ConfigOptionsCallbackHandler::onWrite(BLECharacteristic* pCharacteristic) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
   Serial.println("ConfigOptionsBuffer written ");
 #endif  // DEBUG
 
   ReqSetDisplayConfig rsdc = ReqSetDisplayConfig_init_zero;
   pb_istream_t is = pb_istream_from_buffer(
       pCharacteristic->getData(), pCharacteristic->getValue().length());
-  if (!pb_decode(&is, ReqSetDisplayConfig_fields, &rsdc)) {
-#ifdef DEBUG_SERIAL
+  if (!pb_decode_ex(&is, ReqSetDisplayConfig_fields, &rsdc,
+                    PB_DECODE_DELIMITED)) {
+#ifdef DEBUG
     Serial.println("Decoding received ReqSetDisplayConfig message failed");
 #endif  // DEBUG
   }
@@ -482,10 +483,10 @@ void ConfigOptionsCallbackHandler::onWrite(BLECharacteristic* pCharacteristic) {
   dc_ble_characteristic_->notify();
 }
 void ConfigOptionsCallbackHandler::onRead(BLECharacteristic* pCharacteristic) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
   Serial.print("ConfigOptionsBuffer read: ");
   Serial.println(pCharacteristic->getValue().c_str());
-}
 #endif  // DEBUG
+}
 }  // namespace ble
 }  // namespace tact

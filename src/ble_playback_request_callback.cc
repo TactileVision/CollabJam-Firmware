@@ -6,7 +6,7 @@ namespace ble {
 ReceivePlaybackRequestCallback::ReceivePlaybackRequestCallback(
     tact::vtproto::FileRequestReceiver* receiver)
     : receiver_(receiver) {
-  buf_[0] = kPlaybackRequestMaxLength;
+  buf_[0] = config::ble::kReceivePlaybackRequestBufSize;
 }
 void ReceivePlaybackRequestCallback::onWrite(
     BLECharacteristic* pCharacteristic) {
@@ -18,15 +18,15 @@ void ReceivePlaybackRequestCallback::onWrite(
   ptf.filename.arg = &buf_;
   if (!pb_decode_ex(&istream_, ReqPlayTactonFile_fields, &ptf,
                     PB_DECODE_DELIMITED)) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
     Serial.print("Error decoding filename");
-#endif  // !DEBUG_SERIAL
+#endif  // !DEBUG
   }
   std::string filename((char*)&buf_[2], buf_[1]);
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
   Serial.print("Requested playback for file: ");
   Serial.println(filename.c_str());
-#endif  // !DEBUG_SERIAL
+#endif  // !DEBUG
   receiver_->onFilename(filename);
 }
 void ReceivePlaybackRequestCallback::onRead(
