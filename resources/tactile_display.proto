@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+enum OutputMode {
+    MODE_UNKNOWN = 0;
+    VTPROTO_TACTON = 1;
+    VTPROTO_REALTIME = 2;
+    VTPROTO_TACTON_HARDCODED = 3;
+}
+
+enum MotorType {	
+    MOTOR_TYPE_UNKNOWN = 0;
+    ERM = 1;
+    LRA = 2;
+    PIEZO =3;
+    PNEUMATIC=4;
+    ULTRASONIC=5;
+}
+
+message ChannelConfig{
+    uint32 channel_number = 1;
+    MotorType motor_type = 2;
+    optional float voltage = 3;
+}
+
+message DisplayConfig {
+    OutputMode output_mode = 1;
+    uint32 number_of_channels = 2;
+    repeated ChannelConfig channel_configs = 3;
+}
+
+message AvailableChannelConfigOptions {
+    repeated MotorType motor_types= 1;
+    bool variable_voltage = 2;
+}
+
+message AvailableDisplayConfigOptions {
+    repeated OutputMode output_modes = 1;
+}
+
+message AvailableConfigurationOptions {
+    AvailableDisplayConfigOptions display_config_options = 1;
+    AvailableChannelConfigOptions channel_config_options = 2;
+}
+
+message ReqSetDisplayConfig {
+    OutputMode output_mode = 1;
+}
+
+message ReqSetChannelConfig {
+    ChannelConfig channel_config = 1;
+}
+
+message TactonFileInformation {
+    string filename = 1;
+    string pattern_name = 2;
+    string author = 3;
+    uint32 duration_ms = 4;
+    uint32 n_instructions = 5;
+    uint32 n_channels = 6;
+}
+message TactonFileInformationList {
+    uint32 number_of_messages = 1;
+    repeated TactonFileInformation file_information = 2;
+}
+
+message ReqPlayTactonFile {
+string filename = 1;
+}

@@ -22,6 +22,8 @@
 namespace {
 tact::vtproto::TactonStore tacton_store;
 
+// See resources/tacile_display.vtproto
+// BLE tactile display config
 OutputMode current_output_mode = OutputMode_VTPROTO_REALTIME;
 OutputMode last_active_mode = current_output_mode;
 ChannelConfig channel_configs[config::display::kNumOfOutputs] = {
@@ -35,47 +37,52 @@ ChannelConfig channel_configs[config::display::kNumOfOutputs] = {
     // {8, MotorType::MotorType_ERM, false, 0},
 };
 
+// BLE tactile display config -  protobuf encoder
 tact::vtproto::encode::DisplayConfigEncoder display_config_encoder(
     current_output_mode, channel_configs, config::display::kNumOfOutputs);
-
 tact::vtproto::encode::ConfigOptionsEncoder config_options_encoder(
     (OutputMode*)config::display::kAvailableOuputModes,
     config::display::kAvailableOutputModesLen,
     (MotorType*)config::display::kAvailableMotorTypes,
     config::display::kAvailableMotorTypesLen, false);
+tact::vtproto::encode::TactonFileInformationListEncoder stored_tactons_encoder;
 
 tact::ble::ConfigOptionsCallbackHandler config_options_callback_handler(
     &display_config_encoder,
     config_options_encoder.getAvalilableConfigurationOptions());
 
+// Hardware Interfaces
 tact::I2CMultiplexerDrvInterface vtp_esp_interface(
     (uint8_t)config::display::kNumOfOutputs,
     (uint8_t*)config::display::kMotorPins);
 
+// GPIO with ULN2803A
 // EspVtprotoHardwareInterface vtp_esp_interface(
 //     (uint8_t)config::display::kNumOfOutputs,
 //     (uint8_t*)config::display::kMotorPins);
 
-tact::vtproto::TactonPlayerESP tacton_player_esp(vtp_esp_interface);
-tact::vtproto::TactonReceiver tacton_receiver(tacton_store.getNewTacton());
+// vptoro tacton file (bytes) handling
 tact::vtproto::VtprotoFileSource file_source;
 
+// BLE vtproto receiver (messageReceiver)
+tact::vtproto::TactonReceiver tacton_receiver(tacton_store.getNewTacton());
 tact::vtproto::ImmediateOutputMode immediate_output_mode(vtp_esp_interface);
 
+// vtptoto tacton player
+tact::vtproto::TactonPlayerESP tacton_player_esp(vtp_esp_interface);
+
+// Will be called when vtproto BLE buffer is written, paseses header or
+// instruction to a messageReceiver
 tact::ble::ReceiveVtprotoCallback vtp_ble_callback(&immediate_output_mode);
 
-tact::vtproto::encode::TactonFileInformationListEncoder stored_tactons_encoder;
+// Shows if a file playback was requested and provides the requested filename
 tact::vtproto::PlaybackRequestReceiver playback_req_receiver;
 
+// Will be called when Stored_Tactons_Request_Playback buffer is written
 tact::ble::ReceivePlaybackRequestCallback ble_pb_req(
     (tact::vtproto::FileRequestReceiver*)&playback_req_receiver);
 
 }  // namespace
-namespace tact {
-// uint8_t vt_message_buffer[config::ble::kVtprotoBufSize];
-// Tacton tacton;
-// uint8_t config_change_buffer[config::ble::kConfigChangeBufSize];
-}  // namespace tact
 
 void setup() {
 #ifdef DEBUG
@@ -83,7 +90,10 @@ void setup() {
   while (!Serial) {
   }
 #endif
-
+  /*   Iterate trough all files and move file information into
+    TactonFileInformationListEncoder  */
+  // TODO Encapsulate into seperate function/class
+  // TODO Simplify copy process
   if (!SPIFFS.begin(true)) {
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
@@ -119,8 +129,11 @@ void setup() {
     file = root.openNextFile();
   }
 
+  /* Init TCA/DRV hardware. Cannot be moved into constructor, because i2c
+    operations have to occur inside setup/loop (?) */
   vtp_esp_interface.init();
 
+  // Initialize BLE
   BLEDevice::init(config::ble::kDeviceName);
   BLEServer* server = BLEDevice::createServer();
   server->setCallbacks(new tact::ble::BleConnectionCallback());
@@ -150,6 +163,7 @@ void setup() {
   characteristics[tact::ble::service_tactile_display::kChrNumberOfOutputs]
       ->setValue((uint8_t*)&config::display::kNumOfOutputs, 1);
 
+  // Not used yet
   characteristics[tact::ble::service_tactile_display::kChrDisplayPlaybackState]
       ->setValue("IDLE");
 
@@ -171,7 +185,7 @@ void setup() {
       ->setValue((uint16_t&)config::ble::kReceivePlaybackRequestBufSize);
 
   // Available display config options buffer
-  // Available channel configs buffer
+  // Available channel config options buffer
   characteristics
       [tact::ble::service_tactile_display::kChrConfigAvailableOptions]
           ->setValue(config_options_encoder.getEncodedMessage(),
@@ -181,14 +195,16 @@ void setup() {
       [tact::ble::service_tactile_display::kChrConfigChangeBufferMaxLength]
           ->setValue((uint16_t&)config::ble::kConfigChangeBufSize);
 
+  // Stored tactons
   characteristics[tact::ble::service_tactile_display::kChrStoredTactonsList]
       ->setValue(stored_tactons_encoder.getEncodedMessage(),
                  stored_tactons_encoder.getEncodedMessageLength());
+
   // Assign Callbacks to Characteristics
   characteristics[tact::ble::service_tactile_display::kChrModeVtprotoBuffer]
       ->setCallbacks(&vtp_ble_callback);
 
-  // Assign displayConfig characteristic to handler instance and instance to
+  // Assign displayConfig ble characterstic to displayConfigChangeHandler
   config_options_callback_handler.setBleCharacteristic(
       characteristics[tact::ble::service_tactile_display::kChrDisplayConfig]);
   characteristics[tact::ble::service_tactile_display::kChrConfigChangeBuffer]
