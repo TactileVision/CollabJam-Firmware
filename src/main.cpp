@@ -1,16 +1,16 @@
 #include <Arduino.h>
-#include <ble_esp.h>
-#include <ble_services.h>
-#include <vtproto.h>
-#include <vtproto_handler/immediate_output.h>
-// #include <vtproto_handler/tacton_output.h>
-#include <tacton/tacton_store.h>
-#include <vtproto_handler/tacton_receiver.h>
 
 #include "SPIFFS.h"
+#include "ble_esp.h"
 #include "ble_pb_callback.h"
 #include "ble_playback_request_callback.h"
+#include "ble_services.h"
 #include "config.h"
+#include "tacton/tacton.h"
+#include "tacton/tacton_store.h"
+#include "vtproto.h"
+#include "vtproto_handler/immediate_output.h"
+#include "vtproto_handler/tacton_receiver.h"
 // #include "hardware_interfaces/esp32_hw_interface.h"
 #include "hardware_interfaces/i2c_mp_drv_hw_interface.h"
 #include "playback_request_receiver.h"
@@ -23,6 +23,7 @@ namespace {
 tact::vtproto::TactonStore tacton_store;
 
 OutputMode current_output_mode = OutputMode_VTPROTO_REALTIME;
+OutputMode last_active_mode = current_output_mode;
 ChannelConfig channel_configs[config::display::kNumOfOutputs] = {
     {1, MotorType::MotorType_ERM, false, 0},
     {2, MotorType::MotorType_ERM, false, 0},
@@ -33,54 +34,47 @@ ChannelConfig channel_configs[config::display::kNumOfOutputs] = {
     // {7, MotorType::MotorType_ERM, false, 0},
     // {8, MotorType::MotorType_ERM, false, 0},
 };
-}  // namespace
-namespace tact {
-namespace vtproto {
-// uint8_t vt_message_buffer[config::ble::kVtprotoBufSize];
-
-// Tacton tacton;
-}  // namespace vtproto
-namespace display {
-
-// uint8_t config_change_buffer[config::ble::kConfigChangeBufSize];
 
 tact::vtproto::encode::DisplayConfigEncoder display_config_encoder(
     current_output_mode, channel_configs, config::display::kNumOfOutputs);
-OutputMode last_active_mode = current_output_mode;
 
 tact::vtproto::encode::ConfigOptionsEncoder config_options_encoder(
     (OutputMode*)config::display::kAvailableOuputModes,
     config::display::kAvailableOutputModesLen,
     (MotorType*)config::display::kAvailableMotorTypes,
     config::display::kAvailableMotorTypesLen, false);
-}  // namespace display
-namespace ble {
+
 tact::ble::ConfigOptionsCallbackHandler config_options_callback_handler(
-    &tact::display::display_config_encoder,
-    tact::display::config_options_encoder.getAvalilableConfigurationOptions());
-}  // namespace ble
+    &display_config_encoder,
+    config_options_encoder.getAvalilableConfigurationOptions());
+
+tact::I2CMultiplexerDrvInterface vtp_esp_interface(
+    (uint8_t)config::display::kNumOfOutputs,
+    (uint8_t*)config::display::kMotorPins);
 
 // EspVtprotoHardwareInterface vtp_esp_interface(
 //     (uint8_t)config::display::kNumOfOutputs,
 //     (uint8_t*)config::display::kMotorPins);
-tact::I2CMultiplexerDrvInterface vtp_esp_interface(
-    (uint8_t)config::display::kNumOfOutputs,
-    (uint8_t*)config::display::kMotorPins);
-tact::vtproto::TactonPlayerESP tacton_player_esp(vtp_esp_interface);
 
+tact::vtproto::TactonPlayerESP tacton_player_esp(vtp_esp_interface);
 tact::vtproto::TactonReceiver tacton_receiver(tacton_store.getNewTacton());
-tact::vtproto::ImmediateOutputMode immediate_output_mode(vtp_esp_interface);
-// tact::vtproto::ReceiveAndPlayTactonMode rec_and_play(vtp_esp_interface);
-// tact::ble::ReceiveVtprotoCallback vtp_ble_callback(&immediate_output_mode);
-// tact::ble::ReceiveVtprotoCallback vtp_ble_callback(&tacton_receiver);
 tact::vtproto::VtprotoFileSource file_source;
+
+tact::vtproto::ImmediateOutputMode immediate_output_mode(vtp_esp_interface);
 
 tact::ble::ReceiveVtprotoCallback vtp_ble_callback(&immediate_output_mode);
 
 tact::vtproto::encode::TactonFileInformationListEncoder stored_tactons_encoder;
 tact::vtproto::PlaybackRequestReceiver playback_req_receiver;
+
 tact::ble::ReceivePlaybackRequestCallback ble_pb_req(
     (tact::vtproto::FileRequestReceiver*)&playback_req_receiver);
+
+}  // namespace
+namespace tact {
+// uint8_t vt_message_buffer[config::ble::kVtprotoBufSize];
+// Tacton tacton;
+// uint8_t config_change_buffer[config::ble::kConfigChangeBufSize];
 }  // namespace tact
 
 void setup() {
@@ -102,7 +96,7 @@ void setup() {
     tact::vtproto::TactonHeader th;
     th.file_header_ =
         tact::vtproto::decode::getHeader(th.pattern_name_, th.author_);
-    tact::file_source.getTactonHeader((char*)file.name(), th);
+    file_source.getTactonHeader((char*)file.name(), th);
     tact::vtproto::encode::TactonFileInformationEncode_t t;
 
     strncpy(t.filename_, file.name(), strlen(file.name()));
@@ -118,16 +112,14 @@ void setup() {
     t.author_length_ = th.author_[1];
     t.pattern_name_length_ = th.author_[1];
     t.max_length_ = STORED_TACTONS_HEADER_MAX_STRLEN;
-    tact::stored_tactons_encoder.addTactonFileInformation(
+    stored_tactons_encoder.addTactonFileInformation(
         t, th.file_header_.duration_ms, th.file_header_.n_instructions,
         th.file_header_.n_channels);
     ++x;
     file = root.openNextFile();
   }
-  // Encode Message in characteristic
-  //   tact::file_source.loadTactonFromFile("/test.tacton",
-  //   &tact::tacton_receiver);
-  tact::vtp_esp_interface.init();
+
+  vtp_esp_interface.init();
 
   BLEDevice::init(config::ble::kDeviceName);
   BLEServer* server = BLEDevice::createServer();
@@ -171,9 +163,8 @@ void setup() {
 
   // Display config characteristic
   characteristics[tact::ble::service_tactile_display::kChrDisplayConfig]
-      ->setValue(
-          tact::display::display_config_encoder.getEncodedMessage(),
-          tact::display::display_config_encoder.getEncodedMessageLength());
+      ->setValue(display_config_encoder.getEncodedMessage(),
+                 display_config_encoder.getEncodedMessageLength());
 
   characteristics[tact::ble::service_tactile_display::
                       kChrStoredTactonPlaybackRequestMaxLength]
@@ -183,31 +174,30 @@ void setup() {
   // Available channel configs buffer
   characteristics
       [tact::ble::service_tactile_display::kChrConfigAvailableOptions]
-          ->setValue(
-              tact::display::config_options_encoder.getEncodedMessage(),
-              tact::display::config_options_encoder.getEncodedMessageLength());
+          ->setValue(config_options_encoder.getEncodedMessage(),
+                     config_options_encoder.getEncodedMessageLength());
 
   characteristics
       [tact::ble::service_tactile_display::kChrConfigChangeBufferMaxLength]
           ->setValue((uint16_t&)config::ble::kConfigChangeBufSize);
 
   characteristics[tact::ble::service_tactile_display::kChrStoredTactonsList]
-      ->setValue(tact::stored_tactons_encoder.getEncodedMessage(),
-                 tact::stored_tactons_encoder.getEncodedMessageLength());
+      ->setValue(stored_tactons_encoder.getEncodedMessage(),
+                 stored_tactons_encoder.getEncodedMessageLength());
   // Assign Callbacks to Characteristics
   characteristics[tact::ble::service_tactile_display::kChrModeVtprotoBuffer]
-      ->setCallbacks(&tact::vtp_ble_callback);
+      ->setCallbacks(&vtp_ble_callback);
 
   // Assign displayConfig characteristic to handler instance and instance to
-  tact::ble::config_options_callback_handler.setBleCharacteristic(
+  config_options_callback_handler.setBleCharacteristic(
       characteristics[tact::ble::service_tactile_display::kChrDisplayConfig]);
   characteristics[tact::ble::service_tactile_display::kChrConfigChangeBuffer]
-      ->setCallbacks(&tact::ble::config_options_callback_handler);
+      ->setCallbacks(&config_options_callback_handler);
 
   // Assign callback for file playback
   characteristics
       [tact::ble::service_tactile_display::kChrStoredTactonPlaybackRequest]
-          ->setCallbacks(&tact::ble_pb_req);
+          ->setCallbacks(&ble_pb_req);
 
   service->start();
 
@@ -220,35 +210,34 @@ void setup() {
 
 void loop() {
   // Check current mode
-  if (tact::display::last_active_mode !=
-      tact::display::display_config_encoder.getDisplayConfig()->output_mode) {
+  if (last_active_mode !=
+      display_config_encoder.getDisplayConfig()->output_mode) {
     OutputMode new_mode =
-        tact::display::display_config_encoder.getDisplayConfig()->output_mode;
+        display_config_encoder.getDisplayConfig()->output_mode;
     switch (new_mode) {
       case OutputMode_VTPROTO_REALTIME:
 #ifdef DEBUG_SERIAL
         Serial.println("Switching to Realtime Mode");
 #endif
-        tact::display::last_active_mode = OutputMode_VTPROTO_REALTIME;
-        tact::vtp_ble_callback.changeMessageReviecer(
-            &tact::immediate_output_mode);
+        last_active_mode = OutputMode_VTPROTO_REALTIME;
+        vtp_ble_callback.changeMessageReviecer(&immediate_output_mode);
         break;
       case OutputMode_VTPROTO_TACTON:
 #ifdef DEBUG_SERIAL
         Serial.println("Switching to Tacton Mode");
 #endif
-        tact::display::last_active_mode = OutputMode_VTPROTO_TACTON;
-        tact::tacton_receiver.reset(tacton_store.getNewTacton());
-        tact::vtp_ble_callback.changeMessageReviecer(&tact::tacton_receiver);
+        last_active_mode = OutputMode_VTPROTO_TACTON;
+        tacton_receiver.reset(tacton_store.getNewTacton());
+        vtp_ble_callback.changeMessageReviecer(&tacton_receiver);
         // Reset TactonReceiver
         break;
       case OutputMode_VTPROTO_TACTON_HARDCODED:
 #ifdef DEBUG_SERIAL
         Serial.println("Switching to Hardcoded Playback Mode");
 #endif
-        tact::display::last_active_mode = OutputMode_VTPROTO_TACTON_HARDCODED;
-        tact::playback_req_receiver.reset();
-        tact::tacton_receiver.reset(tacton_store.getNewTacton());
+        last_active_mode = OutputMode_VTPROTO_TACTON_HARDCODED;
+        playback_req_receiver.reset();
+        tacton_receiver.reset(tacton_store.getNewTacton());
         // Reset TactonReceiver
         break;
       default:
@@ -256,43 +245,40 @@ void loop() {
     }
   }
 
-  if (tact::display::display_config_encoder.getDisplayConfig()->output_mode ==
+  if (display_config_encoder.getDisplayConfig()->output_mode ==
       OutputMode_VTPROTO_TACTON) {
     // TODO Check if device is playing or not
-    if (tact::tacton_receiver.hasReceivedTacton()) {
+    if (tacton_receiver.hasReceivedTacton()) {
 #ifdef DEBUG_SERIAL
       Serial.println("Received a tacton!");
 #endif
       // Play back tacton
-      tact::tacton_player_esp.play(tacton_store.getLastTacton());
-      tact::tacton_receiver.reset(tacton_store.getNewTacton());
-      delay(1000);
-      //   tact::file_source.loadTactonFromFile("/test.tacton",
-      //                                        &tact::tacton_receiver);
+      tacton_player_esp.play(tacton_store.getLastTacton());
+      tacton_receiver.reset(tacton_store.getNewTacton());
+#ifdef DEBUG_SERIAL
+      Serial.println("Tacton playback finished!");
+#endif
     }
 
-  } else if (tact::display::display_config_encoder.getDisplayConfig()
-                 ->output_mode == OutputMode_VTPROTO_TACTON_HARDCODED) {
-    if (tact::playback_req_receiver.receivedRequest()) {
+  } else if (display_config_encoder.getDisplayConfig()->output_mode ==
+             OutputMode_VTPROTO_TACTON_HARDCODED) {
+    if (playback_req_receiver.receivedRequest()) {
 #ifdef DEBUG_SERIAL
       Serial.println("Received a request!");
 #endif
-      tact::tacton_receiver.reset(tacton_store.getNewTacton());
+      tacton_receiver.reset(tacton_store.getNewTacton());
 
-      tact::file_source.loadTactonFromFile(
-          (char*)tact::playback_req_receiver.getRequestedFilename().c_str(),
-          &tact::tacton_receiver);
+      file_source.loadTactonFromFile(
+          (char*)playback_req_receiver.getRequestedFilename().c_str(),
+          &tacton_receiver);
     }
-    if (tact::tacton_receiver.hasReceivedTacton()) {
+    if (tacton_receiver.hasReceivedTacton()) {
 #ifdef DEBUG_SERIAL
       Serial.println("Loaded hardcoded tacton!");
 #endif
-      tact::tacton_player_esp.play(tacton_store.getLastTacton());
-      tact::tacton_receiver.reset(tacton_store.getNewTacton());
+      tacton_player_esp.play(tacton_store.getLastTacton());
+      tacton_receiver.reset(tacton_store.getNewTacton());
     }
-    // #ifdef DEBUG_SERIAL
-    //     Serial.println("Waiting for new playback request!");
-    // #endif
   } else {
   }
 }
