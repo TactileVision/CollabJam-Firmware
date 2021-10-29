@@ -20,9 +20,7 @@ class ReceiveVtprotoCallback : public BLECharacteristicCallbacks {
 
  private:
   tact::vtproto::Tacton tacton_;
-  // tact::vtproto::MessageReceiver &message_receiver_;
   tact::vtproto::MessageReceiver* message_receiver_;
-  // tact::vtproto::TactonStore* tacton_store_;
 };
 
 }  // namespace ble

@@ -9,15 +9,14 @@
 namespace config {
 namespace display {
 
-// const uint16_t kNumOfOutputs = TACTILE_DISPLAY_NUM_OUTPUTS;
-// const uint8_t kMotorPins[kNumOfOutputs] = {13, 27, 26, 25, 33, 32, 19, 21};
-
 const uint16_t kNumOfOutputs = TACTILE_DISPLAY_NUM_OUTPUTS;
 const uint8_t kMotorPins[kNumOfOutputs] = {0, 1, 2};
+// const uint8_t kMotorPins[kNumOfOutputs] = {13, 27, 26, 25, 33, 32, 19, 21};
 
 const uint8_t kAvailableOutputModesLen = 3;
 const uint8_t kAvailableMotorTypesLen = 3;
 
+// DisplayConfig
 const OutputMode kAvailableOuputModes[kAvailableOutputModesLen] = {
     OutputMode_VTPROTO_TACTON, OutputMode_VTPROTO_REALTIME,
     OutputMode_VTPROTO_TACTON_HARDCODED};
