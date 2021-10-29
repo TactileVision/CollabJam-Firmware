@@ -486,7 +486,7 @@ void ConfigOptionsCallbackHandler::onRead(BLECharacteristic* pCharacteristic) {
 #ifdef DEBUG_SERIAL
   Serial.print("ConfigOptionsBuffer read: ");
   Serial.println(pCharacteristic->getValue().c_str());
-}
 #endif  // DEBUG
+}
 }  // namespace ble
 }  // namespace tact
