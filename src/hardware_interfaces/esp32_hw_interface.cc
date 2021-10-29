@@ -16,16 +16,16 @@ uint8_t EspVtprotoHardwareInterface::getPwmFromFloat(float value) {
 
 void EspVtprotoHardwareInterface::setIntensity(uint8_t channel, float value) {
   if (channel > this->number_of_actuators_) {
-#ifndef DEBUG_SERIAL
+#ifndef DEBUG
     Serial.println("Channel number to high, does not exsist");
-#endif  // !DEBUG_SERIAL
+#endif  // !DEBUG
   } else {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
     Serial.print("Setting value to intensity ");
     Serial.print(value);
     Serial.print("/");
     Serial.println(getPwmFromFloat(value));
-#endif  // !DEBUG_SERIAL
+#endif  // !DEBUG
     analogWrite(this->channel_pin_map_[channel], this->getPwmFromFloat(value));
   }
 };

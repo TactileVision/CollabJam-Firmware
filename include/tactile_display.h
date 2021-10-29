@@ -68,7 +68,7 @@ typedef struct DisplayConfigEncoder {
   // uint8_t getBufferSize() { return sizeof(buffer_) / sizeof(buffer_[0]); }
   uint8_t getEncodedMessageLength() { return enc_msg_length_; }
   DisplayConfig* getDisplayConfig() { return &dc_; };
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
   void print();
 #endif  // DEBUG
 } DisplayConfigEncoder;

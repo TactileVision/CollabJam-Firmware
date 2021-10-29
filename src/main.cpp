@@ -78,7 +78,7 @@ namespace tact {
 }  // namespace tact
 
 void setup() {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
   Serial.begin(115200);
   while (!Serial) {
   }
@@ -203,7 +203,7 @@ void setup() {
 
   BLEDevice::startAdvertising();
 
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
   Serial.println(BLEDevice::getAddress().toString().c_str());
 #endif
 }
@@ -216,14 +216,14 @@ void loop() {
         display_config_encoder.getDisplayConfig()->output_mode;
     switch (new_mode) {
       case OutputMode_VTPROTO_REALTIME:
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
         Serial.println("Switching to Realtime Mode");
 #endif
         last_active_mode = OutputMode_VTPROTO_REALTIME;
         vtp_ble_callback.changeMessageReviecer(&immediate_output_mode);
         break;
       case OutputMode_VTPROTO_TACTON:
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
         Serial.println("Switching to Tacton Mode");
 #endif
         last_active_mode = OutputMode_VTPROTO_TACTON;
@@ -232,7 +232,7 @@ void loop() {
         // Reset TactonReceiver
         break;
       case OutputMode_VTPROTO_TACTON_HARDCODED:
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
         Serial.println("Switching to Hardcoded Playback Mode");
 #endif
         last_active_mode = OutputMode_VTPROTO_TACTON_HARDCODED;
@@ -249,13 +249,13 @@ void loop() {
       OutputMode_VTPROTO_TACTON) {
     // TODO Check if device is playing or not
     if (tacton_receiver.hasReceivedTacton()) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
       Serial.println("Received a tacton!");
 #endif
       // Play back tacton
       tacton_player_esp.play(tacton_store.getLastTacton());
       tacton_receiver.reset(tacton_store.getNewTacton());
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
       Serial.println("Tacton playback finished!");
 #endif
     }
@@ -263,7 +263,7 @@ void loop() {
   } else if (display_config_encoder.getDisplayConfig()->output_mode ==
              OutputMode_VTPROTO_TACTON_HARDCODED) {
     if (playback_req_receiver.receivedRequest()) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
       Serial.println("Received a request!");
 #endif
       tacton_receiver.reset(tacton_store.getNewTacton());
@@ -273,7 +273,7 @@ void loop() {
           &tacton_receiver);
     }
     if (tacton_receiver.hasReceivedTacton()) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
       Serial.println("Loaded hardcoded tacton!");
 #endif
       tacton_player_esp.play(tacton_store.getLastTacton());

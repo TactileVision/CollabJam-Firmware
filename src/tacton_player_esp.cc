@@ -7,33 +7,33 @@ namespace vtproto {
 TactonPlayerESP::TactonPlayerESP(HardwareInterface& output) : output_(output){};
 
 void TactonPlayerESP::play(Tacton* t) {
-#ifdef DEBUG_SERIAL
-  // t->print();
-#endif  // DEBUG
+  /*   #ifdef DEBUG
+    t->print();
+    #endif  // DEBUG */
   this->timing_.t_elapsed_ = 0;
   this->timing_.t_0_ = millis();
 
   for (uint16_t i = 0; i < t->header_.file_header_.n_instructions; i++) {
     switch (t->instructions_[i].which_concrete_instruction) {
       case Instruction_add_channels_to_group_tag:
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
         Serial.println("add to channel");
 #endif  // DEBUG
         break;
       case Instruction_add_groups_to_group_tag:
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
         Serial.println("add to group");
 #endif  // DEBUG
         break;
       case Instruction_wait_tag:
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
         Serial.println("wait");
 #endif  // DEBUG
         while (this->timing_.t_elapsed_ <
                t->instructions_[i].concrete_instruction.wait.milliseconds) {
           this->timing_.t_elapsed_ = millis() - this->timing_.t_0_;
         }
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
         Serial.print("waited ");
         Serial.println(this->timing_.t_elapsed_);
 #endif  // DEBUG
@@ -41,7 +41,7 @@ void TactonPlayerESP::play(Tacton* t) {
         this->timing_.t_0_ = millis();
         break;
       case Instruction_set_waveform_type_tag:
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
         Serial.println("set waveform");
 #endif  // DEBUG
         break;
@@ -52,7 +52,7 @@ void TactonPlayerESP::play(Tacton* t) {
           if (t->instructions_[i]
                   .concrete_instruction.set_parameter.which_target_id ==
               InstInstantlySetParameter_channel_id_tag) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
             Serial.print("setting channel ");
             Serial.print(
                 t->instructions_[i]
@@ -71,7 +71,7 @@ void TactonPlayerESP::play(Tacton* t) {
             Group* g = t->group_manager_.getGroupByGroupId(
                 t->instructions_[i]
                     .concrete_instruction.set_parameter.target_id.group_id);
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
             Serial.print("setting groups ");
             Serial.print(
                 t->instructions_[i]
@@ -92,7 +92,7 @@ void TactonPlayerESP::play(Tacton* t) {
                       .concrete_instruction.set_parameter.parameter.intensity);
             }
 
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
             Serial.println("set intensity of group");
 #endif  // DEBUG
           }
@@ -100,18 +100,18 @@ void TactonPlayerESP::play(Tacton* t) {
           if (t->instructions_[i]
                   .concrete_instruction.set_parameter.which_target_id ==
               InstInstantlySetParameter_channel_id_tag) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
             Serial.println("set frequency of channel");
 #endif  // DEBUG
           } else {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
             Serial.println("set frequency of group");
 #endif  // DEBUG
           }
         }
         break;
       case Instruction_interpolate_parameter_tag:
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
         Serial.println("interpolate parameter");
 #endif  // DEBUG
         break;

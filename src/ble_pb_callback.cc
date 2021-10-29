@@ -15,7 +15,7 @@ void ReceiveVtprotoCallback::onWrite(BLECharacteristic *pCharacteristic) {
   Decode data with pb_decode_ex, only expect instructions
   execute instructions after receivicing them
   */
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
   Serial.printf("Received message with length %i\n",
                 pCharacteristic->getValue().length());
   // for (size_t i = 0; i < pCharacteristic->getValue().length(); i++) {
@@ -37,14 +37,14 @@ void ReceiveVtprotoCallback::onWrite(BLECharacteristic *pCharacteristic) {
       if (!pb_decode_ex(&istream_, FileHeader_fields,
                         &this->tacton_.header_.file_header_,
                         PB_DECODE_DELIMITED | PB_DECODE_NOINIT)) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
         Serial.printf("Decoding failed: %s\n", PB_GET_ERROR(&istream_));
 #endif
       }
       // message_receiver_->onHeader(fh);
       message_receiver_->onHeader(this->tacton_.header_);
     } else {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
       Serial.println("Decoding instruction");
 #endif
       Instruction instruction = Instruction_init_default;
@@ -56,7 +56,7 @@ void ReceiveVtprotoCallback::onWrite(BLECharacteristic *pCharacteristic) {
       instruction.cb_concrete_instruction.arg = &g;
       if (!pb_decode_ex(&istream_, Instruction_fields, &instruction,
                         PB_DECODE_DELIMITED | PB_DECODE_NOINIT)) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
         Serial.printf("Decoding failed: %s\n", PB_GET_ERROR(&istream_));
 #endif
       }

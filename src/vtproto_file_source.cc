@@ -5,7 +5,7 @@ namespace vtproto {
 
 VtprotoFileSource::VtprotoFileSource() {
   //   if (!SPIFFS.begin(true)) {
-  // #ifdef DEBUG_SERIAL
+  // #ifdef DEBUG
   //     Serial.println("An Error has occurred while mounting SPIFFS");
   // #endif
   //     init_ = false;
@@ -18,7 +18,7 @@ VtprotoFileSource::VtprotoFileSource() {
 VtprotoFileSource::~VtprotoFileSource() {}
 bool VtprotoFileSource::init() {
   if (!SPIFFS.begin(true)) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
     Serial.println("An Error has occurred while mounting SPIFFS");
 #endif
     init_ = false;
@@ -36,7 +36,7 @@ void VtprotoFileSource::loadTactonFromFile(
 
   File file = SPIFFS.open(filename);
   if (!file) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
     Serial.println("Failed to open file for reading");
 #endif  // DEBUG
     return;
@@ -71,7 +71,7 @@ bool VtprotoFileSource::getTactonHeader(char* filename,
 
   File file = SPIFFS.open(filename);
   if (!file) {
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG
     Serial.println("Failed to open file for reading");
 #endif  // DEBUG
     return false;
