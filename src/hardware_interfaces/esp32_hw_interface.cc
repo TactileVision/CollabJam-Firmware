@@ -22,11 +22,14 @@ void EspVtprotoHardwareInterface::setIntensity(uint8_t channel, float value) {
   } else {
 #ifdef DEBUG
     Serial.print("Setting value to intensity ");
-    Serial.print(value);
-    Serial.print("/");
-    Serial.println(getPwmFromFloat(value));
+    // Serial.printvalue);
+    // Serial.print("/");
+    // Serial.println(getPwmFromFloat(value));
 #endif  // !DEBUG
     analogWrite(this->channel_pin_map_[channel], this->getPwmFromFloat(value));
+#ifdef DEBUG
+    Serial.println("setIntensity done");
+#endif  // !DEBUG
   }
 };
 

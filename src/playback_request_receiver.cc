@@ -1,19 +1,19 @@
-#include "playback_request_receiver.h"
+// #include "playback_request_receiver.h"
 
-namespace tact {
-namespace vtproto {
+// namespace tact {
+// namespace vtproto {
 
-PlaybackRequestReceiver::PlaybackRequestReceiver() {}
+// PlaybackRequestReceiver::PlaybackRequestReceiver() {}
 
-PlaybackRequestReceiver::~PlaybackRequestReceiver() {}
-void PlaybackRequestReceiver::onFilename(std::string filename) {
-  requested_filename_ = filename;
-  received_request_ = true;
-}
+// PlaybackRequestReceiver::~PlaybackRequestReceiver() {}
+// void PlaybackRequestReceiver::onFilename(std::string filename) {
+//   requested_filename_ = filename;
+//   received_request_ = true;
+// }
 
-std::string PlaybackRequestReceiver::getRequestedFilename() {
-  received_request_ = false;
-  return requested_filename_;
-}
-}  // namespace vtproto
-}  // namespace tact
+// std::string PlaybackRequestReceiver::getRequestedFilename() {
+//   received_request_ = false;
+//   return requested_filename_;
+// }
+// }  // namespace vtproto
+// }  // namespace tact
