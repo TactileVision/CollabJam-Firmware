@@ -32,6 +32,24 @@ void EspVtprotoHardwareInterface::setIntensity(uint8_t channel, float value) {
 #endif  // !DEBUG
   }
 };
+void EspVtprotoHardwareInterface::setIntensity(uint8_t channel, uint8_t value) {
+  if (channel > this->number_of_actuators_) {
+#ifndef DEBUG
+    Serial.println("Channel number to high, does not exsist");
+#endif  // !DEBUG
+  } else {
+#ifdef DEBUG
+    Serial.print("Setting value to intensity ");
+    // Serial.printvalue);
+    // Serial.print("/");
+    // Serial.println(getPwmFromFloat(value));
+#endif  // !DEBUG
+    analogWrite(this->channel_pin_map_[channel], value);
+#ifdef DEBUG
+    Serial.println("setIntensity done");
+#endif  // !DEBUG
+  }
+};
 
 void EspVtprotoHardwareInterface::setFrequency(uint8_t channel, uint32_t value){
 

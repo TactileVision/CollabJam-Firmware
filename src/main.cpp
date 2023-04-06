@@ -3,6 +3,7 @@
 
 #include "ble/ble_services.h"
 #include "ble/ble_util.h"
+#include "ble_handler.h"
 #include "config.h"
 #include "hardware_interfaces/esp32_hw_interface.h"
 #include "vtproto_callback.h"
@@ -24,7 +25,8 @@ EspVtprotoHardwareInterface vtp_esp_interface(
     (uint8_t)config::display::kNumOfOutputs,
     (uint8_t*)config::display::kMotorPins);
 
-tact::ble::VtprotoHandler vtproto_handler(vtp_esp_interface);
+// tact::ble::VtprotoHandler vtproto_handler(vtp_esp_interface);
+tact::ble::BLEVibrationHandler vibro_handler(vtp_esp_interface);
 
 uint32_t ms = 0;
 
@@ -79,7 +81,7 @@ void setup() {
 
   // Assign Callbacks to Characteristics
   characteristics[tact::ble::vtproto_service::kChrModeVtprotoBuffer]
-      ->setCallbacks(&vtproto_handler);
+      ->setCallbacks(&vibro_handler);
 
   service->start();
   BLEDevice::startAdvertising();
@@ -91,10 +93,10 @@ void setup() {
 }
 
 void loop() {
-  if (!vtproto_handler.instruction_queue_.isEmpty()) {
-    tact::ble::InstructionQueueItem i;
-    vtproto_handler.instruction_queue_.pop(&i);
-    vtproto_handler.executeInstruction(i.instruction);
+  if (!vibro_handler.instruction_queue_.isEmpty()) {
+    tact::ble::DisplayUpdate du;
+    vibro_handler.instruction_queue_.pop(&du);
+    vibro_handler.updateDisplay(du.values, 5);
 #ifdef DEBUG
     Serial.printf("%d ms since last execution\n", millis() - ms);
 #endif

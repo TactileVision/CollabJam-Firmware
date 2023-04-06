@@ -14,6 +14,7 @@ class EspVtprotoHardwareInterface : public tact::vtproto::HardwareInterface {
   EspVtprotoHardwareInterface(uint8_t number_of_actuators,
                               uint8_t* channel_to_pin_map);
   void setIntensity(uint8_t channel, float value);
+  void setIntensity(uint8_t channel, uint8_t value);
   // virtual void setWaveform(uint8_t channel, waveform);
   void setFrequency(uint8_t channel, uint32_t value);
   int getActuatorCount();
