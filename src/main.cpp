@@ -66,22 +66,24 @@ void setup() {
 
   // Assign Values to Characteristics
   characteristics[tact::ble::vtproto_service::kChrNumberOfOutputs]->setValue(
-      (uint8_t*)&config::display::kNumOfOutputs, 1);
+      (uint8_t*)&config::display::kNumOfOutputs, 4);
 
   // Not used yet
-  characteristics[tact::ble::vtproto_service::kChrDisplayPlaybackState]
-      ->setValue("IDLE");
-
-  // characteristics[tact::ble::vtproto_service::kChrDisplayPlaybackRequestStop]->setValue((uint16_t)0);
+  const uint32_t canAmp = 0xFF;
+  const uint32_t canFreq = 0x00;
+  characteristics[tact::ble::vtproto_service::kChrOutputCanAmplitude]->setValue(
+      (uint8_t*)&canAmp, 4);
+  characteristics[tact::ble::vtproto_service::kChrOutputCanFrequency]->setValue(
+      (uint8_t*)&canFreq, 4);
+  // characteristics[tact::ble::vtproto_service::kChrOutputCanFrequency]->setValue((uint16_t)0);
   // // No need to write?
   // TODO Check if value of constant is equal to propagated value
 
-  characteristics[tact::ble::vtproto_service::kChrModeVtprotoMaxMsgLength]
-      ->setValue((uint16_t&)config::ble::kVtprotoBufSize);
-
   // Assign Callbacks to Characteristics
-  characteristics[tact::ble::vtproto_service::kChrModeVtprotoBuffer]
+  characteristics[tact::ble::vtproto_service::kChrAmplitudeBuffer]
       ->setCallbacks(&vibro_handler);
+  // characteristics[tact::ble::vtproto_service::kChrFreqBuffer]
+  //     ->setCallbacks(&vibro_handler);
 
   service->start();
   BLEDevice::startAdvertising();
@@ -93,13 +95,13 @@ void setup() {
 }
 
 void loop() {
-  if (!vibro_handler.instruction_queue_.isEmpty()) {
-    tact::ble::DisplayUpdate du;
-    vibro_handler.instruction_queue_.pop(&du);
-    vibro_handler.updateDisplay(du.values, 5);
-#ifdef DEBUG
-    Serial.printf("%d ms since last execution\n", millis() - ms);
-#endif
-    ms = millis();
-  };
+  // if (!vibro_handler.instruction_queue_.isEmpty()) {
+  //   tact::ble::DisplayUpdate du;
+  //   vibro_handler.instruction_queue_.pop(&du);
+  //   vibro_handler.updateDisplay(du.values, 5);
+  // #ifdef DEBUG
+  //     Serial.printf("%d ms since last execution\n", millis() - ms);
+  // #endif
+  //     ms = millis();
+  //   };
 }

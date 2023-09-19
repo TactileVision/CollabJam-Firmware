@@ -75,7 +75,8 @@ void createCharacteristicsFromDescription(
     BleCharacteristicDescription *description, uint8_t length);
 
 class BleConnectionCallback : public BLEServerCallbacks {
-  void onConnect(BLEServer *pServer);
+  void onConnect(BLEServer *pServer, esp_ble_gatts_cb_param_t *param);
+  // void onConnect(BLEServer *pServer);
   void onDisconnect(BLEServer *pServer);
 };
 

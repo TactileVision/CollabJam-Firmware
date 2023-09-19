@@ -143,6 +143,7 @@ void VtprotoHandler::setInstantParameter(
                        received_state_.getPinValue(i), COMPENSATION_NEW_MIN,
                        COMPENSATION_NEW_MAX, COMPENSATION_OFFSET,
                        received_state_.getNumberOfActivePins()));
+      // Serial.println(compensated_state_.getPinValue(i));
       output_.setIntensity(i, compensated_state_.getPinValue(i));
     }
   } else  // Groups

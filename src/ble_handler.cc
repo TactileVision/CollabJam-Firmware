@@ -14,6 +14,7 @@ void BLEVibrationHandler::onWrite(BLECharacteristic *pCharacteristic) {
   execute instructions after receivicing them
   */
 #ifdef DEBUG
+  ++packages_received;
   Serial.printf("Received message with length %i\n",
                 pCharacteristic->getValue().length());
   // for (size_t i = 0; i < pCharacteristic->getValue().length(); i++) {
@@ -21,20 +22,12 @@ void BLEVibrationHandler::onWrite(BLECharacteristic *pCharacteristic) {
   // }
   // Serial.println();
 #endif
-  DisplayUpdate update;
+  // DisplayUpdate update;
   uint8_t *data = pCharacteristic->getData();
   uint8_t len = pCharacteristic->getValue().length() > 5
                     ? 5
                     : pCharacteristic->getValue().length();
-  for (size_t i = 0; i < len; i++) {
-    Serial.printf("Value for channel %i: %i\n", i, data[i]);
-    update.values[i] = data[i];
-  }
-
-  instruction_queue_.push(&update);
-#ifdef DEBUG
-  Serial.printf("Execution done");
-#endif
+  updateDisplay(data, len);
 }
 
 void BLEVibrationHandler::onRead(BLECharacteristic *pCharacteristic) {}
@@ -44,7 +37,7 @@ void BLEVibrationHandler::updateDisplay(uint8_t *values, uint8_t length) {
   for (size_t i = 0; i < length; i++) {
     // 255 is used as a symbol with the meaning "Don't change this channel"
     if (values[i] != 255) {
-      output_.setIntensity(i, values[i]);
+      analogWrite(config::display::kMotorPins[i], values[i]);
     }
   }
 }

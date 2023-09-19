@@ -7,6 +7,7 @@
 #include "hardware_interfaces/hardware_interface.h"
 #include "hardware_interfaces/pwm_state.h"
 #include "vtproto_callback.h"
+#include "config.h"
 // #include "interface/message_interface.h"
 // #include "tacton/tacton_store.h"
 namespace tact {
@@ -37,7 +38,7 @@ class BLEVibrationHandler : public BLECharacteristicCallbacks {
   void onRead(BLECharacteristic* pCharacteristic);
   // void attachHardwareInterface(tact::vtproto::HardwareInterface& h);
   cppQueue instruction_queue_;
-
+  uint32_t packages_received = 0;
   void updateDisplay(uint8_t* values, uint8_t length);
 
  private:

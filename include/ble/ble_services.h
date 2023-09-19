@@ -5,17 +5,11 @@ namespace tact {
 namespace ble {
 namespace vtproto_service {
 const uint8_t kChrNumberOfOutputs = 0x00;
-const uint8_t kChrDisplayPlaybackState = 0x01;
-const uint8_t kChrDisplayPlaybackRequestStop = 0x02;
-const uint8_t kChrModeVtprotoMaxMsgLength = 0x03;
-const uint8_t kChrModeVtprotoBuffer = 0x04;
-const uint8_t kChrDisplayConfig = 0x05;
-const uint8_t kChrConfigAvailableOptions = 0x06;
-const uint8_t kChrConfigChangeBuffer = 0x07;
-const uint8_t kChrConfigChangeBufferMaxLength = 0x08;
-const uint8_t kChrStoredTactonsList = 0x09;
-const uint8_t kChrStoredTactonPlaybackRequestMaxLength = 0x0A;
-const uint8_t kChrStoredTactonPlaybackRequest = 0x0B;
+const uint8_t kChrOutputCanAmplitude = 0x01;
+const uint8_t kChrOutputCanFrequency = 0x02;
+const uint8_t kChrAmplitudeBuffer = 0x03;
+const uint8_t kChrFreqBuffer = 0x04;
+
 
 // Generic
 const uint8_t kNumberOfCharacteristics = 5;
