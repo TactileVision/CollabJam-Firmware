@@ -26,6 +26,9 @@ void EspVtprotoHardwareInterface::setIntensity(uint8_t channel, float value) {
     // Serial.print("/");
     // Serial.println(getPwmFromFloat(value));
 #endif  // !DEBUG
+    // analogWrite(this->channel_pin_map_[channel], this->getPwmFromFloat(value));
+    // Serial.printf("%f/%d float intensity value???\n", value, this->getPwmFromFloat(value));
+    // analogWrite(this->channel_pin_map_[channel], this->getPwmFromFloat(value));
     analogWrite(this->channel_pin_map_[channel], this->getPwmFromFloat(value));
 #ifdef DEBUG
     Serial.println("setIntensity done");
