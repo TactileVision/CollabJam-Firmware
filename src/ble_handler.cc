@@ -37,7 +37,7 @@ void BLEVibrationHandler::updateDisplay(uint8_t *values, uint8_t length) {
   for (size_t i = 0; i < length; i++) {
     // 255 is used as a symbol with the meaning "Don't change this channel"
     if (values[i] != 255) {
-      analogWrite(config::display::kMotorPins[i], values[i]);
+      output_.setIntensity(i,(uint8_t)values[i]);
     }
   }
 }
