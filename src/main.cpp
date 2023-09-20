@@ -1,11 +1,18 @@
 #include <Arduino.h>
 #include <BLEDevice.h>
 
+#include "Wire.h"
 #include "ble/ble_services.h"
 #include "ble/ble_util.h"
 #include "ble_handler.h"
 #include "config.h"
+
+#ifdef DRVS
+#include "drv/multiplexed_drv.h"
+#include "hardware_interfaces/i2c_mp_drv_hw_interface.h"
+#else
 #include "hardware_interfaces/esp32_hw_interface.h"
+#endif
 #include "vtproto_callback.h"
 // #include <cppQueue.h>
 /*
@@ -18,19 +25,25 @@
  TODO: Refactore namespaces
 
 */
-namespace {
+#ifdef DRVS
+tact::MultiplexedDrvsInterface vtp_esp_interface(
+    (uint8_t)config::display::kNumOfOutputs,
+    (uint8_t*)config::display::kMotorPins);
 
+MultiplexedDrv drvs;
+tact::ActuatorConfig actuator_conf = {tact::MotorType::kLRA, 1.0, 1.0, 170};
+tact::DrvConfig drv_conf = {DRV2605_MODE_INTTRIG, 2, tact::LoopMode::kOpenLoop,
+                            false};
+tact::TactileDisplayInformation td_info = {5, 0x17, 0x17};
+#else
 // GPIO with ULN2803A
 EspVtprotoHardwareInterface vtp_esp_interface(
     (uint8_t)config::display::kNumOfOutputs,
     (uint8_t*)config::display::kMotorPins);
-
-// tact::ble::VtprotoHandler vtproto_handler(vtp_esp_interface);
+TactileDisplayInformation td_info = {8, 0xFF, 0x00};
+#endif
 tact::ble::BLEVibrationHandler vibro_handler(vtp_esp_interface);
-
 uint32_t ms = 0;
-
-}  // namespace
 
 void setup() {
 #ifdef DEBUG
@@ -39,6 +52,15 @@ void setup() {
   }
   Serial.println("Vtpoto Streaming Device in DEBUG Mode");
 #endif
+
+#ifdef DRVS
+  Wire.begin();
+  delay(2500);
+  drvs.initAllDrvs(actuator_conf, drv_conf);
+  drvs.pingAllOutputs();
+  vtp_esp_interface.init(&drvs, &actuator_conf, &drv_conf);
+#endif
+
   // Initialize BLE
   BLEDevice::init(config::ble::kDeviceName);
   BLEServer* server = BLEDevice::createServer();
@@ -57,6 +79,7 @@ void setup() {
       tact::ble::vtproto_service::kServiceUuid,
       1 + (tact::ble::vtproto_service::kNumberOfCharacteristics * 5));
   pAdvertising->addServiceUUID(tact::ble::vtproto_service::kServiceUuid);
+
   BLECharacteristic*
       characteristics[tact::ble::vtproto_service::kNumberOfCharacteristics];
   createCharacteristicsFromDescription(
@@ -66,24 +89,17 @@ void setup() {
 
   // Assign Values to Characteristics
   characteristics[tact::ble::vtproto_service::kChrNumberOfOutputs]->setValue(
-      (uint8_t*)&config::display::kNumOfOutputs, 4);
-
-  // Not used yet
-  const uint32_t canAmp = 0xFF;
-  const uint32_t canFreq = 0x00;
+      (uint8_t*)&td_info.num_outputs, 4);
   characteristics[tact::ble::vtproto_service::kChrOutputCanAmplitude]->setValue(
-      (uint8_t*)&canAmp, 4);
+      (uint8_t*)&td_info.can_change_amplitude, 4);
   characteristics[tact::ble::vtproto_service::kChrOutputCanFrequency]->setValue(
-      (uint8_t*)&canFreq, 4);
-  // characteristics[tact::ble::vtproto_service::kChrOutputCanFrequency]->setValue((uint16_t)0);
-  // // No need to write?
-  // TODO Check if value of constant is equal to propagated value
+      (uint8_t*)&td_info.can_change_frequency, 4);
 
   // Assign Callbacks to Characteristics
   characteristics[tact::ble::vtproto_service::kChrAmplitudeBuffer]
       ->setCallbacks(&vibro_handler);
-  // characteristics[tact::ble::vtproto_service::kChrFreqBuffer]
-  //     ->setCallbacks(&vibro_handler);
+  characteristics[tact::ble::vtproto_service::kChrFreqBuffer]->setCallbacks(
+      &vibro_handler);
 
   service->start();
   BLEDevice::startAdvertising();
@@ -91,17 +107,8 @@ void setup() {
 #ifdef DEBUG
   Serial.println(BLEDevice::getAddress().toString().c_str());
 #endif
-  ms = millis();
 }
 
 void loop() {
-  // if (!vibro_handler.instruction_queue_.isEmpty()) {
-  //   tact::ble::DisplayUpdate du;
-  //   vibro_handler.instruction_queue_.pop(&du);
-  //   vibro_handler.updateDisplay(du.values, 5);
-  // #ifdef DEBUG
-  //     Serial.printf("%d ms since last execution\n", millis() - ms);
-  // #endif
-  //     ms = millis();
-  //   };
+  // action happend in ble_handler.cc as well as in the hardware interfaces
 }

@@ -2,7 +2,10 @@
 	"C_Cpp.errorSquiggles": "disabled",
 	"files.associations": {
 		"sstream": "cpp",
-		"queue": "cpp"
+		"queue": "cpp",
+		"compare": "cpp",
+		"cstdint": "cpp",
+		"*.tcc": "cpp"
 	},
 	"peacock.color": "#5dc9e2",
 	"workbench.colorCustomizations": {
@@ -10,6 +13,7 @@
 		"statusBar.foreground": "#15202b",
 		"statusBarItem.hoverBackground": "#32bbda",
 		"statusBarItem.remoteBackground": "#5dc9e2",
-		"statusBarItem.remoteForeground": "#15202b"
+		"statusBarItem.remoteForeground": "#15202b",
+		"sideBar.border": "#88d7ea"
 	}
 }

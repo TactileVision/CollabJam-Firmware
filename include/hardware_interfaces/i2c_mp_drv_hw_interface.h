@@ -1,8 +1,6 @@
-//TODO: Integrate newly created drv lib from newer projects
-// #ifndef I2C_MP_DRV_HW_INTERFACE_H_
-// #define I2C_MP_DRV_HW_INTERFACE_H_
-
-// #include <interface/hardware_interface.h>
+// TODO: Integrate newly created drv lib from newer projects
+//  #ifndef I2C_MP_DRV_HW_INTERFACE_H_
+//  #define I2C_MP_DRV_HW_INTERFACE_H_
 
 // #include "Arduino.h"
 // #include "config.h"
@@ -10,27 +8,37 @@
 
 // // i2c-components-lib
 // #include "tca9548a.h"
+#ifndef DRVS_INTERFACE_H_
+#define DRVS_INTERFACE_H_
 
-// namespace tact {
+#include <hardware_interfaces/hardware_interface.h>
 
-// class I2CMultiplexerDrvInterface : public tact::vtproto::HardwareInterface {
-//  public:
-//   I2CMultiplexerDrvInterface(uint8_t number_of_actuators,
-//                              uint8_t* channel_to_pin_map);
-//   ~I2CMultiplexerDrvInterface();
-//   void setIntensity(uint8_t channel, float value);
-//   void setFrequency(uint8_t channel, uint32_t value);
-//   int getActuatorCount() { return num_of_actuators_; };
-//   void init();
+#include "Arduino.h"
+#include "debug_util.h"
+#include "drv/multiplexed_drv.h"
+namespace tact {
 
-//  private:
-//   int num_of_actuators_;
-//   uint8_t* channel_to_pin_map_;
-//   tact::TCA9548A tca_;
-//   tact::DRV2605L drvs_[config::display::kNumOfOutputs];
-//   // Adafruit_DRV2605 drv_;
-// };
+class MultiplexedDrvsInterface : public tact::vtproto::HardwareInterface {
+ public:
+  MultiplexedDrvsInterface(uint8_t number_of_actuators,
+                           uint8_t* channel_to_pin_map);
+  ~MultiplexedDrvsInterface();
+  void setIntensity(uint8_t channel, float value);
+  void setIntensity(uint8_t channel, uint8_t value);
+  void setFrequency(uint8_t channel, uint32_t value);
+  int getActuatorCount() { return num_of_actuators_; };
+  void init(MultiplexedDrv* drvs_, ActuatorConfig* actuator_conf_,
+            DrvConfig* drv_conf_);
 
-// }  // namespace tact
+ private:
+  MultiplexedDrv* drvs_;
+  ActuatorConfig* actuator_conf_;
+  DrvConfig* drv_conf_;
+  int num_of_actuators_;
+  uint8_t* channel_to_pin_map_;
+  // MultiplexedDrv drvs;
+};
 
-// #endif  // !I2C_MP_DRV_INTERFACE_H_
+}  // namespace tact
+
+#endif  // !I2C_MP_DRV_INTERFACE_H_
