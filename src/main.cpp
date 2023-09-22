@@ -40,7 +40,7 @@ tact::TactileDisplayInformation td_info = {5, 0x17, 0x17};
 EspVtprotoHardwareInterface vtp_esp_interface(
     (uint8_t)config::display::kNumOfOutputs,
     (uint8_t*)config::display::kMotorPins);
-TactileDisplayInformation td_info = {8, 0xFF, 0x00};
+tact::TactileDisplayInformation td_info = {8, 0xFF, 0x00};
 #endif
 tact::ble::BLEVibrationHandler vibro_handler(vtp_esp_interface);
 uint32_t ms = 0;
