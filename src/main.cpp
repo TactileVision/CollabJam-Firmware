@@ -1,48 +1,51 @@
 #include <Arduino.h>
 #include <BLEDevice.h>
 
-#include "Wire.h"
 #include "ble/ble_services.h"
 #include "ble/ble_util.h"
-#include "ble_handler.h"
-#include "config.h"
+#include "ble/ble_amp_handler.h"
 
 #ifdef DRVS
-#include "drv/multiplexed_drv.h"
+#include "Wire.h"
+#include "hardware/multiplexed_drv.h"
 #include "hardware_interfaces/i2c_mp_drv_hw_interface.h"
 #else
+#include "hardware/uln_pinouts.h"
 #include "hardware_interfaces/esp32_hw_interface.h"
 #endif
-#include "vtproto_callback.h"
-// #include <cppQueue.h>
+
 /*
 
  TODO: Remove all external references
  TODO: Focus firmware only on the direct playback of received instructions
  TODO: Move BLE Init to its own file/class
- TODO: Switch to NimBLE
- TODO: Make a BLE Class wrapper
- TODO: Refactore namespaces
+ TODO: Refactor namespaces
 
 */
 #ifdef DRVS
-tact::MultiplexedDrvsInterface vtp_esp_interface(
-    (uint8_t)config::display::kNumOfOutputs,
-    (uint8_t*)config::display::kMotorPins);
+
+TactileDisplayFrequencyInformation freq_info = {140, 300, 170};
+TactileDisplayInformation td_info = {5, 0x17, 0x17};
 
 MultiplexedDrv drvs;
-tact::ActuatorConfig actuator_conf = {tact::MotorType::kLRA, 1.0, 1.0, 170};
-tact::DrvConfig drv_conf = {DRV2605_MODE_INTTRIG, 2, tact::LoopMode::kOpenLoop,
-                            false};
-tact::TactileDisplayInformation td_info = {5, 0x17, 0x17};
+ActuatorConfig actuator_conf = {MotorType::kLRA, 1.0, 1.0,
+                                freq_info.f_resonance};
+DrvConfig drv_conf = {DRV2605_MODE_INTTRIG, 2, LoopMode::kOpenLoop, false};
+
+MultiplexedDrvsInterface vtp_esp_interface(td_info.num_outputs);
+
 #else
+//TODO Fix number of outputs and pin map specification
+TactileDisplayFrequencyInformation freq_info = {0, 0, 0};
+TactileDisplayInformation td_info = {8, 0xFF, 0x00};
+
 // GPIO with ULN2803A
 EspVtprotoHardwareInterface vtp_esp_interface(
     (uint8_t)config::display::kNumOfOutputs,
     (uint8_t*)config::display::kMotorPins);
-tact::TactileDisplayInformation td_info = {8, 0xFF, 0x00};
 #endif
-tact::ble::BLEVibrationHandler vibro_handler(vtp_esp_interface);
+BLEAmplitudeChangedHandler vibro_handler(vtp_esp_interface,
+                                         td_info.num_outputs);
 uint32_t ms = 0;
 
 void setup() {
@@ -62,7 +65,7 @@ void setup() {
 #endif
 
   // Initialize BLE
-  BLEDevice::init(config::ble::kDeviceName);
+  BLEDevice::init("TB_LRA_HEADBAND");
   BLEServer* server = BLEDevice::createServer();
   server->setCallbacks(new tact::ble::BleConnectionCallback());
   BLEDevice::setPower(ESP_PWR_LVL_P9, ESP_BLE_PWR_TYPE_ADV);
@@ -95,6 +98,9 @@ void setup() {
   characteristics[tact::ble::vtproto_service::kChrOutputCanFrequency]->setValue(
       (uint8_t*)&td_info.can_change_frequency, 4);
 
+  characteristics[tact::ble::vtproto_service::kChrFreqInformation]->setValue(
+      (uint8_t*)&freq_info, 6);
+
   // Assign Callbacks to Characteristics
   characteristics[tact::ble::vtproto_service::kChrAmplitudeBuffer]
       ->setCallbacks(&vibro_handler);
@@ -110,5 +116,5 @@ void setup() {
 }
 
 void loop() {
-  // action happend in ble_handler.cc as well as in the hardware interfaces
+  // action happend in ble_amp_handler.cc as well as in the hardware interfaces
 }

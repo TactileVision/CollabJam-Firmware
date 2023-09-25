@@ -9,7 +9,7 @@ uint8_t getPwmFromFloat(float value);
 void setIntensity(uint8_t channel, float intensity);
 void setFrequency(uint8_t channel, float intensity);
 
-class EspVtprotoHardwareInterface : public tact::vtproto::HardwareInterface {
+class EspVtprotoHardwareInterface : public HardwareInterface {
  public:
   EspVtprotoHardwareInterface(uint8_t number_of_actuators,
                               uint8_t* channel_to_pin_map);

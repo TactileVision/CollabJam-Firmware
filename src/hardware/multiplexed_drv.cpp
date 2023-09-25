@@ -1,4 +1,4 @@
-#include "drv/multiplexed_drv.h"
+#include "hardware/multiplexed_drv.h"
 
 const unsigned int MultiplexedDrv::kNumberOfActuators = 5;
 MultiplexedDrv::MultiplexedDrv(/* args */) {}
@@ -23,8 +23,8 @@ void MultiplexedDrv::initAllDrvs(bool* use_lra_per_channel, uint8_t len) {
   }
 }
 
-void MultiplexedDrv::initAllDrvs(tact::ActuatorConfig actutator_config,
-                                 tact::DrvConfig drv_config) {
+void MultiplexedDrv::initAllDrvs(ActuatorConfig actutator_config,
+                                 DrvConfig drv_config) {
   multiplexer_.setup(0x70);
   for (int i = 0; i < MultiplexedDrv::kNumberOfActuators; i++) {
     multiplexer_.select(i);
@@ -36,8 +36,8 @@ void MultiplexedDrv::initAllDrvs(tact::ActuatorConfig actutator_config,
   }
 }
 
-void MultiplexedDrv::updateAllSettings(tact::ActuatorConfig actutator_config,
-                                       tact::DrvConfig drv_config) {
+void MultiplexedDrv::updateAllSettings(ActuatorConfig actutator_config,
+                                       DrvConfig drv_config) {
   for (int i = 0; i < MultiplexedDrv::kNumberOfActuators; i++) {
     multiplexer_.select(i);
     drv_.setupActuator(actutator_config);

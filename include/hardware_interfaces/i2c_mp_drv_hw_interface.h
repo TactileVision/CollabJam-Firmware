@@ -3,7 +3,6 @@
 //  #define I2C_MP_DRV_HW_INTERFACE_H_
 
 // #include "Arduino.h"
-// #include "config.h"
 // #include "drv2605l.h"
 
 // // i2c-components-lib
@@ -15,13 +14,11 @@
 
 #include "Arduino.h"
 #include "debug_util.h"
-#include "drv/multiplexed_drv.h"
-namespace tact {
+#include "hardware/multiplexed_drv.h"
 
-class MultiplexedDrvsInterface : public tact::vtproto::HardwareInterface {
+class MultiplexedDrvsInterface : public HardwareInterface {
  public:
-  MultiplexedDrvsInterface(uint8_t number_of_actuators,
-                           uint8_t* channel_to_pin_map);
+  MultiplexedDrvsInterface(uint8_t number_of_actuators);
   ~MultiplexedDrvsInterface();
   void setIntensity(uint8_t channel, float value);
   void setIntensity(uint8_t channel, uint8_t value);
@@ -39,6 +36,5 @@ class MultiplexedDrvsInterface : public tact::vtproto::HardwareInterface {
   // MultiplexedDrv drvs;
 };
 
-}  // namespace tact
 
 #endif  // !I2C_MP_DRV_INTERFACE_H_

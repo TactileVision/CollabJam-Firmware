@@ -1,7 +1,5 @@
 #include "i2c/drv2605l.h"
 
-namespace tact {
-
 DRV2605L::DRV2605L() {}
 DRV2605L::~DRV2605L() {}
 
@@ -9,22 +7,22 @@ DRV2605L::~DRV2605L() {}
 bool DRV2605L::drvWriteAndCheck(uint8_t reg, uint8_t value) {
   drv_.writeRegister8(reg, value);
   uint8_t read = drv_.readRegister8(reg);
-/* #ifdef DEBUG_TACTILE
-  Serial.print("[DRV][I2C]:");
-  Serial.print("[REG:");
-  Serial.print(reg, HEX);
-  Serial.print("] exp./read: ");
-  Serial.print(value, HEX);
-  Serial.print("/");
-  Serial.print(read, HEX);
-  Serial.println();
-#endif  // DEBUG_TACTILE */
+  /* #ifdef DEBUG_TACTILE
+    Serial.print("[DRV][I2C]:");
+    Serial.print("[REG:");
+    Serial.print(reg, HEX);
+    Serial.print("] exp./read: ");
+    Serial.print(value, HEX);
+    Serial.print("/");
+    Serial.print(read, HEX);
+    Serial.println();
+  #endif  // DEBUG_TACTILE */
   if (read != value) {
-// TODO Define and set errormsg;
-/* #ifdef DEBUG_TACTILE
-    Serial.println(
-        "[Error][DRV][I2C] Register state does not match specified value");
-#endif  // DEBUG_TACTILE */
+    // TODO Define and set errormsg;
+    /* #ifdef DEBUG_TACTILE
+        Serial.println(
+            "[Error][DRV][I2C] Register state does not match specified value");
+    #endif  // DEBUG_TACTILE */
     return false;
   }
   return true;
@@ -35,7 +33,7 @@ void DRV2605L::begin() { drv_.begin(); }
 void DRV2605L::setupActuator(ActuatorConfig motor_config) {
   // setVoltagesClosedLoop(motor_config);
   setVoltagesOpenLoop(motor_config);
-  if (motor_config.motor_type == tact::MotorType::kLRA) {
+  if (motor_config.motor_type == MotorType::kLRA) {
     drv_.useLRA();
     // TODO: make lra open loop
     setLraFreqOpenLoop(motor_config.frequency);
@@ -52,7 +50,7 @@ void DRV2605L::setupDRV(DrvConfig drv_config) {
 
 void DRV2605L::setVoltagesOpenLoop(ActuatorConfig motor_config) {
   unsigned int clamp_voltage_reg = 0;
-  if (motor_config.motor_type == tact::MotorType::kLRA) {
+  if (motor_config.motor_type == MotorType::kLRA) {
     clamp_voltage_reg =
         motor_config.clamp_voltage /
         (21.32 * 1e-3 * sqrt(1 - motor_config.frequency * 800 * 1e-6));
@@ -66,7 +64,7 @@ void DRV2605L::setVoltagesClosedLoop(ActuatorConfig motor_config) {
   unsigned int rated_voltage_reg = 0;
   unsigned int clamp_voltage_reg = 0;
   // TODO: Differentiate between ERM and LRA. Current Implementation targets LRA
-  if (motor_config.motor_type == tact::MotorType::kLRA) {
+  if (motor_config.motor_type == MotorType::kLRA) {
     uint8_t control2_register = drv_.readRegister8(0x1C);
     uint8_t control5_register = drv_.readRegister8(0x1F);
 
@@ -130,12 +128,12 @@ void DRV2605L::useRtpMode(bool unsigned_mode) {
   drv_.setMode(DRV2605_MODE_REALTIME);
 }
 
-void DRV2605L::setLoopMode(tact::LoopMode mode) {
+void DRV2605L::setLoopMode(LoopMode mode) {
   switch (mode) {
-    case tact::LoopMode::kOpenLoop:
+    case LoopMode::kOpenLoop:
       useOpenLoopMode();
       break;
-    case tact::LoopMode::kClosedLoop:
+    case LoopMode::kClosedLoop:
       useClosedLoopMode();
       break;
   }
@@ -153,4 +151,3 @@ void DRV2605L::useClosedLoopMode() {
   drv_.writeRegister8(DRV2605_REG_CONTROL3,
                       drv_.readRegister8(DRV2605_REG_CONTROL3) & 0b11011110);
 }
-}  // namespace tact

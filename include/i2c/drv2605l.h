@@ -4,7 +4,6 @@
 
 #include "Adafruit_DRV2605.h"
 
-namespace tact {
 
 constexpr unsigned int kSamplingTimes[4] = {150, 200, 250, 300};
 constexpr unsigned int kBlankingAndIdissTimes[16] = {
@@ -117,7 +116,7 @@ class DRV2605L {
   // void output(float value);
   // void output(uint8_t value);
 
-  void setLoopMode(tact::LoopMode mode);
+  void setLoopMode(LoopMode mode);
   /**
    * Sets both ERM and LRA to open loop mode, check datasheet for implications
    */
@@ -129,6 +128,5 @@ class DRV2605L {
   void useClosedLoopMode();
 };
 
-}  // namespace tact
 
 #endif  // !TACT_DRV2605L_H_

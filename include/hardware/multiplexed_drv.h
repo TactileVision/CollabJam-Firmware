@@ -24,7 +24,7 @@
 class MultiplexedDrv {
  public:
   static const unsigned int kNumberOfActuators;
-  tact::DRV2605L drv_;
+  DRV2605L drv_;
 
 // Specify the multiplexer used by setting the debug flag for the used
 // enviornment in platformio.ini. Datasheets for both multiplexers are located
@@ -47,11 +47,11 @@ class MultiplexedDrv {
    */
   void initAllDrvs(bool use_lra);  // TODO (individual) useLRA/useERM
   void initAllDrvs(bool* use_lra_per_channel, uint8_t len);
-  void initAllDrvs(tact::ActuatorConfig actutator_config,
-                   tact::DrvConfig drv_config);
+  void initAllDrvs(ActuatorConfig actutator_config,
+                   DrvConfig drv_config);
 
-  void updateAllSettings(tact::ActuatorConfig actutator_config,
-                         tact::DrvConfig drv_config);
+  void updateAllSettings(ActuatorConfig actutator_config,
+                         DrvConfig drv_config);
 
   /**Plays the 'Strong Click - 100%' pattern from the the DRV2605L pattern
    * library (datasheet p.63ff) on each DRV.
