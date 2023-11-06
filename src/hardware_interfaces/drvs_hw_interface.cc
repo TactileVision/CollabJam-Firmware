@@ -1,4 +1,4 @@
-#include "hardware_interfaces/i2c_mp_drv_hw_interface.h"
+#include "hardware_interfaces/drvs_hw_interface.h"
 
 MultiplexedDrvsInterface::~MultiplexedDrvsInterface(){};
 MultiplexedDrvsInterface::MultiplexedDrvsInterface(
@@ -23,11 +23,16 @@ void MultiplexedDrvsInterface::setIntensity(uint8_t channel, float value) {
 
 void MultiplexedDrvsInterface::setIntensity(uint8_t channel, uint8_t value) {
   // DRV2605L datasheet chapter 8.5.8.1.1 Open-Loop Mode
+  DEBUG_PRINTLN("Setting intensity");
   drvs_->multiplexer_.select(channel);
   int x = map(value, 0, 254, 0, 127);
   drvs_->drv_.drv_.setRealtimeValue(x);
 }
 void MultiplexedDrvsInterface::setFrequency(uint8_t channel, uint32_t value) {
+  actuator_conf_->frequency = value;
+  drvs_->multiplexer_.select(channel);
+  drvs_->drv_.setupActuator(*actuator_conf_);
+  // drvs_->drv_.setupDRV(drv_config);
   // drvsmultiplexer_.select(channel);
   // drvsdrv_.drv_.setRealtimeValue(value);
 }

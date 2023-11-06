@@ -5,8 +5,10 @@ MultiplexedDrv::MultiplexedDrv(/* args */) {}
 
 MultiplexedDrv::~MultiplexedDrv() {}
 
+void MultiplexedDrv::setMultiplexerAddress(uint8_t addr) { mp_addr_ = addr; }
+
 void MultiplexedDrv::initAllDrvs(bool* use_lra_per_channel, uint8_t len) {
-  multiplexer_.setup(0x70);
+  multiplexer_.setup(mp_addr_);
   for (int i = 0; i < len; i++) {
     DEBUG_PRINTF("SETTING UP DRV %u\n", i);
     multiplexer_.select(i);
@@ -25,7 +27,7 @@ void MultiplexedDrv::initAllDrvs(bool* use_lra_per_channel, uint8_t len) {
 
 void MultiplexedDrv::initAllDrvs(ActuatorConfig actutator_config,
                                  DrvConfig drv_config) {
-  multiplexer_.setup(0x70);
+  multiplexer_.setup(mp_addr_);
   for (int i = 0; i < MultiplexedDrv::kNumberOfActuators; i++) {
     multiplexer_.select(i);
     drv_.begin();

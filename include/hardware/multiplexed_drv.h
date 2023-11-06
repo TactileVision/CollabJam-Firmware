@@ -25,6 +25,7 @@ class MultiplexedDrv {
  public:
   static const unsigned int kNumberOfActuators;
   DRV2605L drv_;
+  uint8_t mp_addr_ = 0x70;
 
 // Specify the multiplexer used by setting the debug flag for the used
 // enviornment in platformio.ini. Datasheets for both multiplexers are located
@@ -45,6 +46,7 @@ class MultiplexedDrv {
    * @param use_lra Specifies for all channels if LRA motors(true) or ERM
    * motors(false) are used.
    */
+  void setMultiplexerAddress(uint8_t adddr);
   void initAllDrvs(bool use_lra);  // TODO (individual) useLRA/useERM
   void initAllDrvs(bool* use_lra_per_channel, uint8_t len);
   void initAllDrvs(ActuatorConfig actutator_config,

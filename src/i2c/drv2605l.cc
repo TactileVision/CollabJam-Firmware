@@ -35,7 +35,6 @@ void DRV2605L::setupActuator(ActuatorConfig motor_config) {
   setVoltagesOpenLoop(motor_config);
   if (motor_config.motor_type == MotorType::kLRA) {
     drv_.useLRA();
-    // TODO: make lra open loop
     setLraFreqOpenLoop(motor_config.frequency);
   } else {
     drv_.useERM();

@@ -1,7 +1,6 @@
 #ifndef ULN_PINOUTS_H_
 #define ULN_PINOUTS_H_
 
-#include "tactile_display.pb.h"
 
 // LIBRARY WIDE OVERRIDE VALUES
 #define TACTILE_DISPLAY_NUM_OUTPUTS 5
