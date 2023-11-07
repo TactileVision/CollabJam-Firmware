@@ -8,10 +8,8 @@ BLEFrequencyChangedHandler::BLEFrequencyChangedHandler(
 BLEFrequencyChangedHandler::~BLEFrequencyChangedHandler() {}
 
 void BLEFrequencyChangedHandler::onWrite(BLECharacteristic *pCharacteristic) {
-#ifdef DEBUG
-  Serial.printf("[BLE/FREQ]Received message with length %i\n",
-                pCharacteristic->getValue().length());
-#endif
+  DEBUG_PRINTF("[BLE/FREQ]Received message with length %i\n",
+               pCharacteristic->getValue().length());
   uint8_t *data = pCharacteristic->getData();
   uint8_t len = pCharacteristic->getValue().length() > (2 * num_outputs_)
                     ? (2 * num_outputs_)
@@ -23,10 +21,10 @@ void BLEFrequencyChangedHandler::onWrite(BLECharacteristic *pCharacteristic) {
     // 255 is used as a symbol with the meaning "Don't change this channel"
     // i = 0, 2, 4, ...
     DEBUG_PRINTF("[BLE/FREQ] Received value\n");
-    uint16_t freq = data[0] | (data[1] << 8);
-    // DEBUG_PRINTLN(data[0]);
-    // DEBUG_PRINTLN(data[1]);
-    if (freq >= freq_info_.f_min && freq <= freq_info_.f_max) {
+    uint16_t freq = data[i] | (data[i + 1] << 8);
+    DEBUG_PRINTLN(data[i]);
+    DEBUG_PRINTLN(data[i + 1]);
+    if (freq >= freq_info_.f_min && freq <= freq_info_.f_max && freq != 0) {
       // output_.setIntensity(i, (uint8_t)data[i]);
       DEBUG_PRINTF("[BLE/FREQ] Set actor to %u Hz\n", freq);
       output_.setFrequency(dev_index, freq);
