@@ -46,7 +46,7 @@ IssPcbHardwareInterface hw_interface(td_info.num_outputs);
 #elif BOARD_CJ2
 std::string device_name = "CollabJam Ver.2";
 // TODO Check Frequency ranges for DA7280
-TactileDisplayFrequencyInformation freq_info = {25, 1000, 170};
+TactileDisplayFrequencyInformation freq_info = {25, 500, 170};
 TactileDisplayInformation td_info = {4, 0x0F, 0x0F};
 CollabJamV2HardwareInterface hw_interface;
 #else

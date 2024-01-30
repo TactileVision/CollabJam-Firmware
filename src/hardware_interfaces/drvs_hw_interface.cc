@@ -28,11 +28,9 @@ void MultiplexedDrvsInterface::setIntensity(uint8_t channel, uint8_t value) {
   int x = map(value, 0, 254, 0, 127);
   drvs_->drv_.drv_.setRealtimeValue(x);
 }
+
 void MultiplexedDrvsInterface::setFrequency(uint8_t channel, uint32_t value) {
   actuator_conf_->frequency = value;
   drvs_->multiplexer_.select(channel);
-  drvs_->drv_.setupActuator(*actuator_conf_);
-  // drvs_->drv_.setupDRV(drv_config);
-  // drvsmultiplexer_.select(channel);
-  // drvsdrv_.drv_.setRealtimeValue(value);
+  drvs_->drv_.setLraFreqOpenLoop(actuator_conf_->frequency);
 }
