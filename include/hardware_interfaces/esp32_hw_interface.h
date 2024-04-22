@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <analogWrite.h>
 #include "hardware_interfaces/hardware_interface.h"
+#include "defines.h"
 
 uint8_t getPwmFromFloat(float value);
 void setIntensity(uint8_t channel, float intensity);

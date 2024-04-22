@@ -8,7 +8,7 @@
 #include <BLEUtils.h>
 
 #include <sstream>
-
+#include "defines.h"
 namespace tact {
 namespace ble {
 

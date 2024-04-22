@@ -6,7 +6,7 @@ DebugUtils.h - Simple debugging utilities.
 #define DEBUGUTILS_H
 
 #include "Arduino.h"
-
+#include "defines.h"
 // Define TV_DEBUG_SERIAL in platformio.ini file to make functions available
 
 #ifdef TV_DEBUG_SERIAL

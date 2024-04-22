@@ -5,6 +5,8 @@
 
 #include "hardware_interfaces/hardware_interface.h"
 #include "debug_util.h"
+#include "defines.h"
+
 // #include "interface/message_interface.h"
 // #include "tacton/tacton_store.h"
 

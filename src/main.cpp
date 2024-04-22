@@ -1,10 +1,12 @@
 #include <Arduino.h>
 #include <BLEDevice.h>
-
+#include "defines.h"
 #include "ble/ble_amp_handler.h"
 #include "ble/ble_freq_handler.h"
 #include "ble/ble_services.h"
 #include "ble/ble_util.h"
+
+
 
 #ifdef DRVS
 #include "Wire.h"
@@ -17,6 +19,9 @@
 #elif BOARD_CJ2
 #include "Wire.h"
 #include "hardware_interfaces/cj2_hw_interface.h"
+#elif BOARD_CJ4
+#include "Wire.h"
+#include "hardware_interfaces/cj4_hw_interface.h"
 #else
 #include "hardware/uln_pinouts.h"
 #include "hardware_interfaces/esp32_hw_interface.h"
@@ -44,11 +49,16 @@ ActuatorConfig actuator_conf = {MotorType::kLRA, 3.0, 3.0,
 DrvConfig drv_conf = {DRV2605_MODE_INTTRIG, 2, LoopMode::kOpenLoop, false};
 IssPcbHardwareInterface hw_interface(td_info.num_outputs);
 #elif BOARD_CJ2
-std::string device_name = "CollabJam Ver.2";
+std::string device_name = "CollabJam Ver.2 II";
 // TODO Check Frequency ranges for DA7280
 TactileDisplayFrequencyInformation freq_info = {25, 500, 170};
-TactileDisplayInformation td_info = {4, 0x0F, 0x0F};
+TactileDisplayInformation td_info = {4, 0x0F, 0x00};
 CollabJamV2HardwareInterface hw_interface;
+#elif BOARD_CJ4
+std::string device_name = "CollabJam Ver.4";
+TactileDisplayFrequencyInformation freq_info = {25, 500, 170};
+TactileDisplayInformation td_info = {6, 0x3F, 0x3F};
+CollabJamV4HardwareInterface hw_interface;
 #else
 std::string device_name = "TB_ERM_CJ";
 // TODO Fix number of outputs and pin map specification
@@ -67,12 +77,15 @@ BLEFrequencyChangedHandler freq_handler(hw_interface, td_info.num_outputs,
 uint32_t ms = 0;
 
 void setup() {
+
 #ifdef DEBUG
   Serial.begin(115200);
   while (!Serial) {
   }
+  delay(1000);
   Serial.println("Vtpoto Streaming Device in DEBUG Mode");
 #endif
+
 
 #ifdef DRVS
   Wire.begin();
@@ -99,7 +112,7 @@ void setup() {
   }
 
   hw_interface.init(drvs, &actuator_conf, &drv_conf);
-#elif BOARD_CJ2
+#elif BOARD_CJ2 || BOARD_CJ4
   Wire.begin();
   delay(2500);
   hw_interface.init();
@@ -109,8 +122,8 @@ void setup() {
   BLEDevice::init(device_name);
   BLEServer* server = BLEDevice::createServer();
   server->setCallbacks(new tact::ble::BleConnectionCallback());
-  BLEDevice::setPower(ESP_PWR_LVL_P9, ESP_BLE_PWR_TYPE_ADV);
-  BLEDevice::setPower(ESP_PWR_LVL_P9, ESP_BLE_PWR_TYPE_SCAN);
+  // BLEDevice::setPower(ESP_PWR_LVL_P9, ESP_BLE_PWR_TYPE_ADV);
+  // BLEDevice::setPower(ESP_PWR_LVL_P9, ESP_BLE_PWR_TYPE_SCAN);
 
   BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->setScanResponse(true);
