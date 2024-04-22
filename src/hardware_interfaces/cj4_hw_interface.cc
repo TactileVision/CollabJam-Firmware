@@ -13,7 +13,6 @@ void CollabJamV4HardwareInterface::init() {
 
   for (uint8_t i = 0; i < 6; i++) {
     mp_.select(i);
-    delay(100);
     if (!actor_[i].begin())
       DEBUG_PRINTLN("[cj4] Could not communicate with Haptic Driver.");
     else
@@ -40,13 +39,11 @@ void CollabJamV4HardwareInterface::setIntensity(uint8_t channel,
 
   int x = map(value, 0, 254, 0, 127);
   mp_.select(channel);
-  delay(100);
   actor_[channel].setVibrate(x);
 }
 void CollabJamV4HardwareInterface::setFrequency(uint8_t channel,
                                                 uint32_t value) {
   if (channel > 6) return;
   mp_.select(channel);
-  delay(100);
   actor_[channel].setActuatorLRAfreq(value);
 }
