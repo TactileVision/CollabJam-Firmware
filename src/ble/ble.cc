@@ -38,9 +38,9 @@ void BleConnectionCallback::onConnect(BLEServer *pServer,
 #ifdef DEBUG
   Serial.println("Device connected to server");
 #endif  // DEBUG_TACTILE
-  // BLEDevice::setPower(ESP_PWR_LVL_P9, ESP_BLE_PWR_TYPE_CONN_HDL0);
-  // pServer->updateConnParams(param->connect.remote_bda, 0x06, 0x10, 10, 400);
-  // pServer->updateConnParams(param->connect.remote_bda, 0x01, 0x05, 1, 400);
+  BLEDevice::setPower(ESP_PWR_LVL_P9, ESP_BLE_PWR_TYPE_CONN_HDL0);
+  // pServer->updateConnParams(param->connect.remote_bda, 0x10, 0x20, 0, 400);
+  pServer->updateConnParams(param->connect.remote_bda, 0x06, 0x10, 0, 400);
 }
 void BleConnectionCallback::onDisconnect(BLEServer *pServer) {
 #ifdef DEBUG
