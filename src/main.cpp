@@ -76,7 +76,8 @@ void setup() {
   Serial.println(FW_NAME);
   Serial.println(GIT_TAG);
   Serial.println(GIT_REV);
-  Serial.println("device: " + String(device_name));
+  auto device = "device: " + device_name;
+  Serial.println(device_name.c_str());
 #endif
 
   // Initialize Hardware
