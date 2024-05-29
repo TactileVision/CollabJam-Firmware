@@ -7,11 +7,12 @@
 #include "ble/ble_util.h"
 #include "defines.h"
 
-#ifdef BOARD_CJ1
+#if defined(BOARD_CJ0) || defined(BOARD_CJ1)
 #include "hardware/uln_pinouts.h"
 #include "hardware_interfaces/esp32_hw_interface.h"
-// !END BOARD_CJ1
-#elif BOARD_CJ2
+// !END BOARD_CJ0 BOARD_CJ1
+#endif
+#ifdef BOARD_CJ2
 #include "Wire.h"
 #include "hardware_interfaces/cj2_hw_interface.h"
 // !END BOARD_CJ2
@@ -31,7 +32,7 @@ std::string pcb_name = PCB_NAME;
 std::string pcb_version = PCB_VERSION;
 std::string device_name = pcb_name + " " + pcb_version;
 
-#ifdef BOARD_CJ1
+#if defined(BOARD_CJ0) || defined(BOARD_CJ1)
 // TODO Fix number of outputs and pin map specification
 TactileDisplayFrequencyInformation freq_info = {0, 0, 0};
 TactileDisplayInformation td_info = {8, 0xFF, 0x00};
@@ -39,8 +40,9 @@ TactileDisplayInformation td_info = {8, 0xFF, 0x00};
 EspVtprotoHardwareInterface hw_interface((uint8_t)
                                              config::display::kNumOfOutputs,
                                          (uint8_t*)config::display::kMotorPins);
-// !END BOARD_CJ1
-#elif BOARD_CJ2
+// !END BOARD_CJ0 BOARD_CJ1
+#endif
+#ifdef BOARD_CJ2
 // TODO Check Frequency ranges for DA7280
 TactileDisplayFrequencyInformation freq_info = {25, 500, 170};
 TactileDisplayInformation td_info = {4, 0x0F, 0x00};
@@ -88,7 +90,8 @@ void setup() {
   drvs.pingAllOutputs();
   hw_interface.init(&drvs, &actuator_conf, &drv_conf);
 // !END BOARD_CJ3
-#elif BOARD_CJ2 || BOARD_CJ4
+#endif
+#if defined(BOARD_CJ2) || defined(BOARD_CJ4)
   Wire.begin();
   delay(2500);
   hw_interface.init();
