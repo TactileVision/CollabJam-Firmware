@@ -30,7 +30,7 @@
 
 std::string pcb_name = PCB_NAME;
 std::string pcb_version = PCB_VERSION;
-std::string device_name = pcb_name + " " + pcb_version + "-" + GIT_TAG;
+std::string device_name = pcb_name + "\(" + pcb_version + "-" + GIT_TAG + "\) 🫨";
 
 #if defined(BOARD_CJ0) || defined(BOARD_CJ1)
 // TODO Fix number of outputs and pin map specification
